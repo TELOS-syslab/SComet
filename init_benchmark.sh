@@ -35,7 +35,7 @@ rm -rf ../QoS/memcached.log
 for((i=0;i<\${1:-1};i++))
 do
     echo "create thread \${i}"
-    client/mutated_memcache 127.0.0.1:11211 \${2:-200000} -n 1 -w 5s -c 5s -s 600s  >> ../QoS/memcached.log &
+    client/mutated_memcache 127.0.0.1:11211 ${2:-50000} -n 1 -w 1s -c 1s -s ${3:-600}s  1> ../QoS/memcached_${i}.log 2> stdout &
     sleep 0.1
 done
 wait
