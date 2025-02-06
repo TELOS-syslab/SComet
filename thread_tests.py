@@ -6,6 +6,7 @@ import time
 import subprocess
 import signal
 import random
+from config import *
 
 available_benchmark_set = ['parsec-benchmark', 'stream', 'iperf', 'spec2017', 'ecp']
 
@@ -15,7 +16,7 @@ LC_instr = {
     "nginx": "perf stat -I 1000 -o temp.log sh /home/wjy/SComet/benchmarks/nginx/script/nginx.sh 4",
 }
 
-BE_thread = [1, 2, 4, 8]
+BE_thread = [1, 2, 4, 8, 16, 32]
 
 def get_cache_ways():
     try:
@@ -30,19 +31,6 @@ def get_cache_ways():
     except Exception as e:
         print(f"Error retrieving cache information: {e}")
         return None
-
-
-def get_last_two_cores():
-    try:
-        result = subprocess.run(['lscpu'], stdout=subprocess.PIPE, universal_newlines=True)
-        for line in result.stdout.split('\n'):
-            if 'CPU(s):' in line and 'NUMA' not in line:
-                total_cores = int(line.split()[-1])
-                return total_cores - 2, total_cores - 1
-    except Exception as e:
-        print(f"Error retrieving core information: {e}")
-        return None, None
-
 
 if len(sys.argv) > 1:
     benchmark_set = sys.argv[1]
