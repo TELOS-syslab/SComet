@@ -1,13 +1,13 @@
 import subprocess
 
 CPU_cores = {
-    'NUMA0' = range(0, 56) + range(112,168)
-    'NUMA1' = range(56, 112) + range(168,224)
+    'NUMA0': [str(i) for i in range(0, 56)],
+    # 'NUMA1': [str(i) for i in range(56, 112)],
 }
 
 def get_cache_ways():
     try:
-        result = subprocess.run(['pqos', '-s'], stdout=subprocess.PIPE, universal_newlines=True)
+        result = subprocess.run('pqos -s', stdout=subprocess.PIPE, universal_newlines=True, shell=True)
         for line in result.stdout.split('\n'):
             if 'L3CA COS' in line:
                 cache_info = line.split()
