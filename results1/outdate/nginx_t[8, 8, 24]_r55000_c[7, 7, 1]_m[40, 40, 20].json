@@ -1,0 +1,1 @@
+{"nginx": {"519.lbm_r": {"95th_latency": 2662.25, "99th_latency": 3073.5, "violate_rate": 1.8245684065934067, "throughput": 55000}, "507.cactuBSSN_r": {"95th_latency": 2526.625, "99th_latency": 2928.125, "violate_rate": 1.4014651085434187, "throughput": 55000}, "baseline": {"95th_latency": 2395.75, "99th_latency": 2778.5, "violate_rate": 1.3174146149572032, "throughput": 55000}}}

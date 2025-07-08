@@ -1,0 +1,42 @@
+Running thread 11 on core 43
+Running thread 12 on core 44
+Running thread 13 on core 45
+Running thread 14 on core 46
+Running thread 15 on core 47
+Running thread 16 on core 48
+Running thread 17 on core 49
+Running thread 18 on core 50
+Running thread 19 on core 51
+Running thread 20 on core 52
+Running thread 21 on core 53
+Running thread 22 on core 54
+Running thread 23 on core 55
+{'519.lbm_r': (0, (2064.4375, 3446.25, 0.514667133098839, 22.18376962017289))}
+NOTE:  Mixed use of MSR and kernel interfaces to manage
+       CAT or CMT & MBM may lead to unexpected behavior.
+Allocation reset successful
+[4/10] Running sudo python3 bandwidth_monitor.py spec2017
+benchmark list:
+['500.perlbench_r', '502.gcc_r', '503.bwaves_r', '505.mcf_r', '507.cactuBSSN_r', '508.namd_r', '510.parest_r', '511.povray_r', '519.lbm_r', '520.omnetpp_r', '521.wrf_r', '523.xalancbmk_r', '525.x264_r', '526.blender_r', '527.cam4_r', '531.deepsjeng_r', '538.imagick_r', '541.leela_r', '544.nab_r', '548.exchange2_r', '549.fotonik3d_r', '554.roms_r', '557.xz_r']
+Cache ways for LC task: 14
+Memory bandwidth ratio for LC task: 70
+NOTE:  Mixed use of MSR and kernel interfaces to manage
+       CAT or CMT & MBM may lead to unexpected behavior.
+Allocation reset successful
+NOTE:  Mixed use of MSR and kernel interfaces to manage
+       CAT or CMT & MBM may lead to unexpected behavior.
+Allocation reset successful
+COS1 LLC Mask: 0x07f
+COS2 LLC Mask: 0x3f80
+COS3 LLC Mask: 0x4000
+pqos -R -e "llc:1=0x07f;mba:1=30"
+pqos -e "llc:2=0x3f80;mba:2=40"
+pqos -e "llc:3=0x4000;mba:3=30"
+NOTE:  Mixed use of MSR and kernel interfaces to manage
+       CAT or CMT & MBM may lead to unexpected behavior.
+Allocation reset successful
+SOCKET 0 L3CA COS1 => MASK 0x7f
+SOCKET 0 MBA COS1 => 30% requested, 30% applied
+Allocation configuration altered.
+NOTE:  Mixed use of MSR and kernel interfaces to manage
+       CAT or CMT & MBM may lead to unexpected behavior.
