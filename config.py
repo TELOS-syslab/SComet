@@ -5,6 +5,7 @@ import time
 import signal
 
 ROOT = "/home/wjy/SComet"
+curr_ip = "162.105.86.11"
 
 CPU_cores = {
     'NUMA0': [str(i) for i in range(0, 56)],
@@ -17,7 +18,20 @@ nodes = {
 }
 
 def run_on_node(ip, instr):
-    command = f"sshpass -p {shlex.quote(nodes[ip]['passwd'])} ssh {shlex.quote(nodes[ip]['user'])}@{ip} {shlex.quote(instr)}"
+    remote_cmd = f"bash -c {shlex.quote(instr)}"
+    command = (
+        f"sshpass -p {shlex.quote(nodes[ip]['passwd'])} "
+        f"ssh -o StrictHostKeyChecking=no {shlex.quote(nodes[ip]['user'])}@{ip} "
+        f"{remote_cmd}"
+    )
+    return subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, preexec_fn=os.setsid)
+
+def copy_from_node(ip, src, dest):
+    remote_src = f"{nodes[ip]['user']}@{ip}:{src}"
+    command = (
+        f"sshpass -p {shlex.quote(nodes[ip]['passwd'])} "
+        f"scp -o StrictHostKeyChecking=no {remote_src} {shlex.quote(dest)}"
+    )
     return subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, preexec_fn=os.setsid)
 
 LC_instr = {
@@ -28,15 +42,18 @@ LC_instr = {
     # "masstree": [f"bash {ROOT}/benchmarks/masstree/script/server.sh",
     #              f"bash {ROOT}/benchmarks/masstree/script/client.sh"]
     "masstree": [f"",
-                  f"bash {ROOT}/benchmarks/masstree/script/masstree.sh"]
+                  f"bash {ROOT}/benchmarks/masstree/script/masstree.sh"],
+    "xapian": [f"",
+                 f"bash {ROOT}/benchmarks/xapian/script/xapian.sh"]
 }
 
-tailbench_benchmarks = ['masstree']
+tailbench_benchmarks = ['masstree', 'xapian']
 
 QoS = {
     "memcached": 120,
     "nginx": 3000,
     "masstree": 2000,
+    "xapian": 10000,
 }
 
 def get_cache_ways():
@@ -96,7 +113,7 @@ def read_LC_latency_95(filename):
                 if '0.950000' in outputs[i]:
                     latency = float(outputs[i].split()[0]) * 1000
                     return latency
-        elif 'masstree' in filename:
+        elif any([lc in filename for lc in tailbench_benchmarks]):
             for i in range(len(outputs)):
                 if 'end2end' in outputs[i]:
                     return float(outputs[i].split()[6]) * 1000
@@ -116,7 +133,7 @@ def read_LC_latency_99(filename):
                 if '0.990625' in outputs[i]:
                     latency = float(outputs[i].split()[0]) * 1000
                     return latency
-        elif 'masstree' in filename:
+        elif any([lc in filename for lc in tailbench_benchmarks]):
             for i in range(len(outputs)):
                 if 'end2end' in outputs[i]:
                     return float(outputs[i].split()[10]) * 1000
@@ -129,7 +146,7 @@ def read_LC_latency_violate_QoS(filename, threshold):
         lines = f.readlines()
     start_idx = None
     for i, line in enumerate(lines):
-        if 'memcached' in filename or 'masstree' in filename:
+        if 'memcached' in filename or any([lc in filename for lc in tailbench_benchmarks]):
             if "service latency percentiles" in line.lower():
                 start_idx = i + 1
                 break
@@ -145,7 +162,7 @@ def read_LC_latency_violate_QoS(filename, threshold):
         pattern = re.compile(r'(\d+)[a-z]{2} percentile:\s+(\d+)')
     if 'nginx' in filename:
         pattern = re.compile(r'^\s*(\d+\.\d+)\s+(\d+\.\d+)\s+(\d+)\s+([\d\.]+|inf)$')
-    if 'masstree' in filename:
+    if any([lc in filename for lc in tailbench_benchmarks]):
         pattern = re.compile(r'(\d+)(?:st|nd|rd|th) percentile:\s+([0-9.eE+-]+)')
 
     for line in lines[start_idx:]:
@@ -158,7 +175,7 @@ def read_LC_latency_violate_QoS(filename, threshold):
         if 'nginx' in filename:
             percentile = float(match.group(2)) * 100
             value = float(match.group(1)) * 1000
-        if 'masstree' in filename:
+        if any([lc in filename for lc in tailbench_benchmarks]):
             percentile = float(match.group(1))
             value = float(match.group(2)) * 1000
         # print(percentile, value)

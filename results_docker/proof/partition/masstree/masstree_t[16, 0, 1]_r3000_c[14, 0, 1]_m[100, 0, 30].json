@@ -1,0 +1,3 @@
+{"masstree": {"519.lbm_r": {"95th_latency": 2044.0, "99th_latency": 6058.0, "violate_rate": 5.763545921844404, "throughput": 3000}, "baseline": {"95th_latency": 1315.0, "99th_latency": 3503.0, "violate_rate": 2.6115656471452176, "throughput": 3000}}}
+{"masstree": {"519.lbm_r": {"95th_latency": 2028.0, "99th_latency": 6176.0, "violate_rate": 5.851129411851192, "throughput": 3000}, "baseline": {"95th_latency": 1307.0, "99th_latency": 3527.0, "violate_rate": 2.688240357086277, "throughput": 3000}}}
+{"masstree": {"519.lbm_r": {"95th_latency": 2041.0, "99th_latency": 6069.0, "violate_rate": 5.79481576177989, "throughput": 3000}, "baseline": {"95th_latency": 1302.0, "99th_latency": 3666.0, "violate_rate": 2.5972749084880933, "throughput": 3000}}}

@@ -1,176 +1,367 @@
 #!/usr/bin/python3
-import container
 import time
 import math
 import sys
 import os
 import numpy
+
 sys.path.append('/home/wjy/SComet')
 from config import *
+from container import *
+
 
 class Allocater:
-    benchmark_set = ''
-    lc_containers = []
-    be_containers = []
-    latency_result = {}
-    violate_result = {}
-    QoS = {}
-    main_ip = ''
-
-    def __init__(self, benchmark_set_, QoS_, main_ip_ = '172.17.1.119'):
+    def __init__(self, benchmark_set_, lc_tasks_, be_tasks_, ip_):
         self.benchmark_set = benchmark_set_
         self.lc_containers = []
         self.be_containers = []
         self.latency_result = {}
         self.violate_result = {}
-        self.QoS = QoS_
-        self.main_ip = main_ip_
+        self.lc_tasks = lc_tasks_
+        self.be_tasks = be_tasks_
+        self.ip = ip_
+        self.max_container = 8
+
+        self.available_resources = {
+            'CPU': list(range(56)),
+            'LLC': 0x7fff,
+            'MBW': 100
+        }
+
+        self.resource_allocation = {}
+        self.resource_wheel = ['CPU', 'LLC', 'MBW']
 
     def get_lc_latency(self, container_instance):
         benchmark = container_instance.task
-        print('get latency %s' % benchmark)
-        if benchmark not in self.QoS.keys():
-            return None
+        print(f'get latency {benchmark}')
+        if benchmark not in self.lc_tasks.keys():
+            return None, None
 
-        log_path = '/home/wjy/SComet/%s/QoS/%s.%s.log' % (self.benchmark_set, container_instance.ip, benchmark)
-        if benchmark == 'memcached':
-            result_path = "/home/wjy/SComet/%s/QoS/%s.log" % (self.benchmark_set, benchmark)
-            container_instance.copy_file(result_path, log_path)
-        elif benchmark == 'nginx':
-            result_path = '/home/wjy/SComet/wrk2/result.txt'
-            container_instance.copy_file(result_path, log_path)
-        elif benchmark == 'masstree' or benchmark == 'silo' or benchmark == 'sphinx':
-            result_path = '/home/wjy/SComet/tailbench/tailbench-v0.9/%s/lats.bin' % benchmark
-            container_instance.copy_file(result_path, result_path)
-            exe.cmd_and_wait('%s "python /home/wjy/SComet/tailbench/tailbench-v0.9/utilities/parselats.py %s"' % (container_instance.ssh_pre(), result_path))
-            exe.cmd_and_wait('%s "mv lats.txt %s"' % (container_instance.ssh_pre(), log_path))
-        elif benchmark == 'redis-master' or benchmark == 'redis-slave':
-            result_path = "/home/wjy/SComet/%s/QoS/redis.log" % self.benchmark_set
-            container_instance.copy_file(result_path, log_path)
-
-        if self.main_ip != container_instance.ip:
+        # copy from remote node
+        log_path = f'/home/wjy/SComet/{self.benchmark_set}/QoS/{container_instance.ip}.{benchmark}.log'
+        if benchmark in ['masstree', 'silo', 'sphinx']:
+            result_path = f'/home/wjy/SComet/benchmarks/{benchmark}/QoS/{benchmark}_0.log'
+            container_instance.copy_from_container(result_path, log_path)
+        else:
+            print(f"Benchmark {self.benchmark_set}-{benchmark} not supported")
+            return None, None
+        if curr_ip != container_instance.ip:
             print('start sending latency result')
-            exe.cmd_and_wait('sshpass -p \'%s\' scp root@%s:%s %s' % (container_instance.passwd, container_instance.ip, log_path, log_path))
+            copy_from_node(container_instance.ip, log_path, log_path)
             print('finish sending latency result')
 
-        output = []
-        violate = []
+        output = None
+        violate = None
+        prev_latency = 0.0
+        qos_threshold = self.lc_tasks[benchmark]["QoS"]
         if not os.path.exists(log_path):
-            return output
-
-        with open(log_path, mode='r') as log_f:
-            logs = log_f.readlines()
-            logs = [log for log in logs if ['percentile','latency'] == log.split()[1:3]]
-            for index in range(1, len(logs)):
-                log = logs[index]
+            return None, None
+        with open(log_path, 'r') as f:
+            lines = f.readlines()
+        for line in lines:
+            line = line.strip()
+            if 'percentile' in line and ':' in line:
                 try:
-                    percentile = float(log.split('th')[0])
-                    latency = float(log.split()[-1])
-                    prev_latency = float(logs[index - 1].split()[-1])
+                    percentile_str, latency_str = line.split('percentile:')
+                    percentile = int(
+                        percentile_str.strip().replace('th', '').replace('st', '').replace('nd', '').replace('rd', ''))
+                    latency = float(latency_str.strip())
                 except ValueError:
                     continue
+
                 if percentile == 99:
-                    output.append(latency)
-                if prev_latency < self.QoS[benchmark] and latency >= self.QoS[benchmark]:
-                    violate.append(round(100 - percentile, 2))
-                if latency < self.QoS[benchmark] and percentile == 100:
-                    violate.append(0)
+                    output = latency
+                if prev_latency < qos_threshold and latency >= qos_threshold:
+                    violate = round(100 - percentile, 2)
+                if latency < qos_threshold and percentile == 100:
+                    violate = 0
+                prev_latency = latency
 
-        if benchmark not in self.violate_result.keys():
-            self.violate_result[benchmark] = [violate]
-        if len(self.violate_result[benchmark][-1]) > len(violate):
-            self.violate_result[benchmark].append(violate)
-        else:
-            self.violate_result[benchmark][-1] = violate
+        if benchmark not in self.latency_result:
+            self.latency_result[benchmark] = []
+        if benchmark not in self.violate_result:
+            self.violate_result[benchmark] = []
+        self.latency_result[benchmark].append(output)
+        self.violate_result[benchmark].append(violate)
 
-        if benchmark not in self.latency_result.keys():
-            self.latency_result[benchmark] = [output]
-        if len(self.latency_result[benchmark][-1]) > len(output):
-            self.latency_result[benchmark].append(output)
-        else:
-            self.latency_result[benchmark][-1] = output
-
-        return output
+        return output, violate
 
     def get_QoS_status(self):
         slack_dict = {}
         for index in range(len(self.lc_containers)):
             container_instance = self.lc_containers[index]
+            self.get_lc_latency(container_instance)
+
             benchmark = container_instance.task
-            latency = self.get_lc_latency(container_instance)
-            if not latency:
-                continue
-            if len(latency) >= 2:
-                curr_latency = latency[-1]
-                prev_latency = latency[-2]
-                print('benchmark %s latency: %f' % (benchmark, curr_latency))
-                print('benchmark %s prev latency: %f' % (benchmark, prev_latency))
-                slack = (self.QoS[benchmark] - curr_latency) / self.QoS[benchmark]
-                prev_slack = (self.QoS[benchmark] - prev_latency) / self.QoS[benchmark]
-                slack_dict[index] = (slack, prev_slack)
-        slack_sorted_list = sorted(slack_dict.items(), key=lambda x: x[1][0])
+            latencies = self.latency_result[benchmark]
+            curr_latency = latencies[-1]
+            prev_latency = latencies[-2] if len(latencies) > 1 else latencies[-1]
+
+            print(f'benchmark {benchmark} latency: {curr_latency}')
+            print(f'benchmark {benchmark} prev latency: {prev_latency}')
+            slack = (self.lc_tasks[benchmark]["QoS"] - curr_latency) / self.lc_tasks[benchmark]["QoS"]
+            prev_slack = (self.lc_tasks[benchmark]["QoS"] - prev_latency) / self.lc_tasks[benchmark]["QoS"]
+            slack_dict[index] = {'slack': slack, 'prev_slack': prev_slack}
+
+        # sort with current slack
+        slack_sorted_list = sorted(slack_dict.items(), key=lambda x: x[1]['slack'])
         if not slack_sorted_list:
             return 0, slack_sorted_list
-        max_slack = slack_sorted_list[-1][1][0]
-        max_slack_prev = slack_sorted_list[-1][1][1]
-        min_slack = slack_sorted_list[0][1][0]
-        min_slack_prev = slack_sorted_list[0][1][1]
+        max_slack = slack_sorted_list[-1][1]['slack']
+        max_slack_prev = slack_sorted_list[-1][1]['prev_slack']
+        min_slack = slack_sorted_list[0][1]['slack']
+        min_slack_prev = slack_sorted_list[0][1]['prev_slack']
+
+        # LC tasks violating QoS, need to remove BE tasks
         if min_slack < 0 and min_slack_prev < 0:
             return -1, slack_sorted_list
+
+        # LC tasks idle, can add BE tasks
         elif max_slack >= 0.15 and max_slack_prev >= 0.15:
             return 1, slack_sorted_list
+
+        # LC tasks not idle or busy, keep BE tasks unchanged
         else:
             return 0, slack_sorted_list
-        
+
     def prune(self):
-        unfinished_lc = []
-        unfinished_be = []
-        index = 0
-        while index < len(self.lc_containers):
-            if self.lc_containers[index].running:
-                if self.lc_containers[index].running.poll() != None:
-                    print('lc task %s finished' % self.lc_containers[index].get_running_task())
-                    unfinished_lc.append(self.lc_containers[index].get_running_task())
-                    self.lc_containers[index].remove()
-                    del self.lc_containers[index]
-                    continue
-            index += 1
-        index = 0
-        while index < len(self.be_containers):
-            if self.be_containers[index].running:
-                if self.be_containers[index].running.poll() != None:
-                    print('be task %s finished' % self.be_containers[index].get_running_task())
-                    self.be_containers[index].remove()
-                    del self.be_containers[index]
-                    continue
-            index += 1
-        return unfinished_lc, unfinished_be
+        finished_lc = []
+        finished_be = []
+        remaining_lc = []
+        remaining_be = []
 
-    def unused_lc_index(self):
-        index = 0
-        for index in range(10):
-            used = False
-            for container_instance in self.lc_containers:
-                if int(container_instance.name[-1]) == index:
-                    used = True
-                    break
-            if not used:
-                return index
+        for container in self.lc_containers:
+            if (container.running and container.running.poll() is not None) or :
+                print(f'lc task {container.get_running_task()} finished')
+                finished_lc.append(container.get_running_task())
+                index = container.index
+                if index in self.resource_allocation:
+                    alloc = self.resource_allocation.pop(index)
+                    self.available_resources['CPU'].extend(alloc['CPU'])
+                    self.available_resources['LLC'] |= alloc['LLC']
+                    self.available_resources['MBW'] += alloc['MBW']
+                container.remove()
+            else:
+                remaining_lc.append(container)
+        self.lc_containers = remaining_lc
+
+        for container in self.be_containers:
+            if container.running and container.running.poll() is not None:
+                print(f'be task {container.get_running_task()} finished')
+                finished_be.append(container.get_running_task())
+                index = container.index
+                if index in self.resource_allocation:
+                    alloc = self.resource_allocation.pop(index)
+                    self.available_resources['CPU'].extend(alloc['CPU'])
+                    self.available_resources['LLC'] |= alloc['LLC']
+                    self.available_resources['MBW'] += alloc['MBW']
+                container.remove()
+            else:
+                remaining_be.append(container)
+        self.be_containers = remaining_be
+
+        self.available_resources['CPU'].sort()
+
+        return finished_lc, finished_be
+
+    def unused_index(self):
+        all_containers = self.lc_containers + self.be_containers
+        for i in range(self.max_container):
+            if all(int(c.name[-1]) != i for c in all_containers):
+                return i
         return None
 
-    def unused_be_index(self):
-        index = 0
-        for index in range(10):
-            used = False
-            for container_instance in self.be_containers:
-                if int(container_instance.name[-1]) == index:
-                    used = True
+    def get_lowest_llc_line(self, mask=None):
+        if mask is None:
+            mask = self.available_resources['LLC']
+        return mask & -mask
+
+    def run_lc_task(self, task, commands):
+        if not self.available_resources['CPU'] or self.available_resources['LLC'] == 0 or self.available_resources[
+            'MBW'] < 1:
+            print(f"No enough resource for task {task} on {self.ip}:")
+            print(self.available_resources)
+            return None
+
+        index = self.unused_index()
+        if index is None:
+            print(f"Cannot add more than {self.max_container} tasks to {self.ip}")
+            return None
+
+        container = Container('scomet', f'lc_container{index}', index, self.ip, index)
+
+        allocated_cpu = self.available_resources['CPU'][:]
+        allocated_llc = self.available_resources['LLC']
+        allocated_mbw = self.available_resources['MBW']
+        container.assign_cpu_cores(allocated_cpu)
+        container.assign_llc_mbw(allocated_llc, allocated_mbw)
+        self.resource_allocation[index] = {
+            'CPU': allocated_cpu,
+            'LLC': allocated_llc,
+            'MBW': allocated_mbw
+        }
+        self.available_resources['CPU'] = []
+        self.available_resources['LLC'] = 0
+        self.available_resources['MBW'] = 0
+
+        container.run_task(self.benchmark_set, task, commands)
+        self.lc_containers.append(container)
+        return f'lc_container{index}'
+
+    def run_be_task(self, task, commands):
+        if not self.available_resources['CPU'] or self.available_resources['LLC'] == 0 or self.available_resources[
+            'MBW'] < 10:
+            print(f"No enough resource for task {task}:")
+            print(self.available_resources)
+            return
+
+        index = self.unused_index()
+        if index is None:
+            print(f"Cannot add more than {self.max_container} tasks to {self.ip}")
+            return None
+
+        container = Container('scomet', f'be_container{index}', index, self.ip, index)
+
+        allocated_cpu = [self.available_resources['CPU'][0]]
+        allocated_llc = self.get_lowest_llc_line()
+        allocated_mbw = 10
+        container.assign_cpu_cores(allocated_cpu)
+        container.assign_llc_mbw(allocated_llc, allocated_mbw)
+        self.resource_allocation[index] = {
+            'CPU': allocated_cpu,
+            'LLC': allocated_llc,
+            'MBW': allocated_mbw
+        }
+        self.available_resources['CPU'].pop(0)
+        self.available_resources['LLC'] &= ~allocated_llc
+        self.available_resources['MBW'] -= 10
+
+        container.run_task(self.benchmark_set, task, commands)
+        self.be_containers.append(container)
+        return f'be_container{index}'
+
+    def assign_all(self):
+        all_containers = self.lc_containers + self.be_containers
+        for container in all_containers:
+            index = container.index
+            if index not in self.resource_allocation.keys():
+                continue
+
+            alloc = self.resource_allocation[index]
+            cpu = alloc["CPU"]
+            llc = alloc["LLC"]
+            mbw = alloc["MBW"]
+            if cpu is not None:
+                container.assign_cpu_cores(cpu)
+            if llc is not None and mbw is not None:
+                container.assign_llc_mbw(llc, mbw)
+
+    def push_wheel(self):
+        if not self.resource_wheel:
+            return None
+        self.resource_wheel.append(self.resource_wheel.pop(0))
+        return self.resource_wheel[0]
+
+    def reallocate(self):
+        QoS_status, slack_list = self.get_QoS_status()
+        if QoS_status == 0:
+            return 0
+        if QoS_status == 1:
+            if self.release_lc_resource(slack_list):
+                if self.be_containers:
+                    be_index = self.be_containers[0].index
+                    if be_index not in self.resource_allocation:
+                        self.resource_allocation[be_index] = {'CPU': [], 'LLC': 0, 'MBW': 0}
+                    self.resource_allocation[be_index]['CPU'].extend(self.available_resources['CPU'])
+                    self.resource_allocation[be_index]['LLC'] |= self.available_resources['LLC']
+                    self.resource_allocation[be_index]['MBW'] += self.available_resources['MBW']
+                    self.available_resources['CPU'] = []
+                    self.available_resources['LLC'] = 0
+                    self.available_resources['MBW'] = 0
+                    self.assign_all()
+            else:
+                return 0
+        if QoS_status == -1:
+            success = False
+            for try_num in range(3):
+                success = self.add_lc_resource(slack_list)
+                if success:
+                    return 1
+                if self.release_lc_resource(slack_list):
+                    continue
+                for be_container in self.be_containers:
+                    be_index = be_container.index
+                    if self.release_container_resource(be_index):
+                        break
+            print("Warning! QoS violation but no more resource!")
+            print(slack_list)
+            return -1
+
+    def release_lc_resource(self, slack_list):
+        for index, slack_info in reversed(slack_list):
+            if self.release_container_resource(index):
+                return True
+        return False
+
+    def add_lc_resource(self, slack_list):
+        index, slack_info = slack_list[0]
+        if self.add_container_resource(index):
+            return True
+        return False
+
+    def release_container_resource(self, index):
+        success = False
+        for n in range(3):
+            if self.resource_wheel[0] == "CPU":
+                if len(self.resource_allocation[index]['CPU']) > 1:
+                    self.available_resources['CPU'].append(self.resource_allocation[index]['CPU'].pop(0))
+                    self.available_resources['CPU'].sort()
+                    success = True
                     break
-            if not used:
-                return index
-        return None
+            if self.resource_wheel[0] == "LLC":
+                if self.get_lowest_llc_line(self.resource_allocation[index]['LLC']) != self.resource_allocation[index][
+                    'LLC']:
+                    allocated_llc = self.get_lowest_llc_line(self.resource_allocation[index]['LLC'])
+                    self.resource_allocation[index]['LLC'] &= ~allocated_llc
+                    self.available_resources['LLC'] |= allocated_llc
+                    success = True
+                    break
+            if self.resource_wheel[0] == "MBW":
+                if self.resource_allocation[index]['MBW'] > 10:
+                    self.resource_allocation[index]['MBW'] -= 10
+                    self.available_resources['MBW'] += 10
+                    success = True
+                    break
+            self.push_wheel()
+        if success:
+            self.assign_all()
+            return True
+        return False
 
-
-
-
-
+    def add_container_resource(self, index):
+        success = False
+        for n in range(3):
+            if self.resource_wheel[0] == "CPU":
+                if len(self.available_resources['CPU']) > 1:
+                    self.resource_allocation[index]['CPU'].append(self.available_resources['CPU'].pop(0))
+                    self.available_resources['CPU'].sort()
+                    success = True
+                    break
+            if self.resource_wheel[0] == "LLC":
+                if self.get_lowest_llc_line(self.available_resources['LLC']) != self.available_resources['LLC']:
+                    allocated_llc = self.get_lowest_llc_line(self.available_resources['LLC'])
+                    self.available_resources['LLC'] &= ~allocated_llc
+                    self.resource_allocation[index]['LLC'] |= allocated_llc
+                    success = True
+                    break
+            if self.resource_wheel[0] == "MBW":
+                if self.available_resources['MBW'] > 10:
+                    self.available_resources['MBW'] -= 10
+                    self.resource_allocation[index]['MBW'] += 10
+                    success = True
+                    break
+            self.push_wheel()
+        if success:
+            self.assign_all()
+            return True
+        return False

@@ -1,0 +1,1 @@
+{"masstree": {"519.lbm_r": {"95th_latency": 6931.0, "99th_latency": 15442.0, "violate_rate": 24.04942759575247, "throughput": 1500}, "544.nab_r": {"95th_latency": 4437.0, "99th_latency": 7820.0, "violate_rate": 17.85320697766216, "throughput": 1500}, "baseline": {"95th_latency": 4416.0, "99th_latency": 8012.0, "violate_rate": 16.120604335595306, "throughput": 1500}}}

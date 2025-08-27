@@ -19,15 +19,16 @@ VOLUMES = {
     SPEC2017_HOST_DIR: {'bind': SPEC2017_CONTAINER_DIR, 'mode': 'rw'}
 }
 
-# 任务到端口的映射（Masstree不需要端口）
+# 任务到端口的映射（Tailbench不需要端口）
 TASK_PORTS = {
     "memcached": 11211,
     "nginx": 80,
-    "masstree": None  # Masstree不使用网络端口
+    "masstree": None,
+    "xapian": None
 }
 
 available_benchmark_set = ['parsec-benchmark', 'stream', 'iperf', 'spec2017', 'ecp']
-LC_tasks = ["memcached", "nginx", "masstree"]  # 默认所有任务，但会被命令行参数覆盖
+LC_tasks = ["memcached", "nginx", "masstree", "xapian"]  # 默认所有任务，但会被命令行参数覆盖
 
 print("=== 命令行参数 ===")
 print(sys.argv)  # 打印所有参数，确认 --lc nginx 是否存在
@@ -54,17 +55,18 @@ print("=== LC任务列表 ===")
 print(LC_tasks)
 
 
-# benchmark_set = "spec2017"
-# benchmark_list = ["519.lbm_r", "507.cactuBSSN_r", "500.perlbench_r", "502.gcc_r", "503.bwaves_r", "505.mcf_r", "508.namd_r", "510.parest_r", "511.povray_r", "520.omnetpp_r", "521.wrf_r", "523.xalancbmk_r", "525.x264_r","526.blender_r", "527.cam4_r", "531.deepsjeng_r", "538.imagick_r", "541.leela_r", "544.nab_r", "548.exchange2_r", "549.fotonik3d_r", "554.roms_r", "557.xz_r", "baseline"]
+benchmark_set = "spec2017"
+benchmark_list = ["519.lbm_r", "507.cactuBSSN_r", "500.perlbench_r", "502.gcc_r", "503.bwaves_r", "505.mcf_r", "508.namd_r", "510.parest_r", "511.povray_r", "520.omnetpp_r", "521.wrf_r", "523.xalancbmk_r", "525.x264_r","526.blender_r", "527.cam4_r", "531.deepsjeng_r", "538.imagick_r", "541.leela_r", "544.nab_r", "548.exchange2_r", "549.fotonik3d_r", "554.roms_r", "557.xz_r", "baseline"]
+# benchmark_list = [i for i in benchmark_list if i not in ["519.lbm_r", "544.nab_r", "520.omnetpp_r", "523.xalancbmk_r", "557.xz_r", "baseline"]]
+# benchmark_list = ["519.lbm_r", "544.nab_r", "520.omnetpp_r", "523.xalancbmk_r", "557.xz_r", "baseline"]
+benchmark_list = ["519.lbm_r", "baseline"]
 
-# benchmark_list = ["507.cactuBSSN_r", "502.gcc_r", "519.lbm_r", "503.bwaves_r", "500.perlbench_r", "510.parest_r", "505.mcf_r", "508.namd_r", "511.povray_r", "520.omnetpp_r", "525.x264_r","521.wrf_r", "527.cam4_r", "523.xalancbmk_r", "538.imagick_r", "531.deepsjeng_r", "541.leela_r", "526.blender_r", "544.nab_r",  "557.xz_r", "549.fotonik3d_r", "554.roms_r", "548.exchange2_r","baseline"]
-benchmark_set = "parsec-benchmark"
-benchmark_list = [
-    "blackscholes", "bodytrack", "facesim", "ferret",
-    "fluidanimate", "freqmine", "raytrace", "swaptions",
-    "vips", "x264", "baseline"
-]
-
+# benchmark_set = "parsec-benchmark"
+# benchmark_list = [
+#     "blackscholes", "bodytrack", "facesim", "ferret",
+#     "fluidanimate", "freqmine", "raytrace", "swaptions",
+#     "vips", "x264", "baseline"
+# ]
 # benchmark_list = [
 #     "facesim", "baseline"
 # ]
@@ -88,6 +90,11 @@ for i in range(len(threads)):
     print(f"分配核心 {i}: {core_str}")
     core.append(core_str)
 
+if '--be-core' in sys.argv:
+    start = sum(threads[0:-1])
+    end = start + int(sys.argv[sys.argv.index('--be-core') + 1])
+    core[-1] = ','.join(CPU_cores['NUMA0'][start:end])
+
 LC_rps = []
 if '-r' in sys.argv:
     LC_rps = sys.argv[sys.argv.index('-r') + 1].split(',')
@@ -107,6 +114,27 @@ memory_bandwidth_ratio = [50, 40, 10]
 if '-m' in sys.argv:
     memory_bandwidth_ratio = sys.argv[sys.argv.index('-m') + 1].split(',')
     memory_bandwidth_ratio = [int(m) for m in memory_bandwidth_ratio]
+
+use_palloc = False
+if '--palloc' in sys.argv:
+    use_palloc = True
+    subprocess.run("echo 1 | sudo tee /sys/kernel/debug/palloc/use_palloc", shell=True, check=True)
+    subprocess.run("echo never | sudo tee /sys/kernel/mm/transparent_hugepage/enabled", shell=True, check=True)
+    subprocess.run("echo 0x0000F000 | sudo tee /sys/kernel/debug/palloc/palloc_mask > /dev/null", shell=True,
+                   check=True)
+    palloc_base_path = "/sys/fs/cgroup/palloc"
+    for name in os.listdir(palloc_base_path):
+        full_path = os.path.join(palloc_base_path, name)
+        if name.startswith("part") and os.path.isdir(full_path):
+            try:
+                with open(os.path.join(full_path, "tasks")) as f:
+                    for pid in f:
+                        pid = pid.strip()
+                        subprocess.run(f"echo {pid} | sudo tee {base_path}/tasks", shell=True, check=True)
+                subprocess.run(f"sudo rmdir {full_path}", shell=True, check=True)
+                print(f"已删除 {full_path}")
+            except Exception as e:
+                print(f"删除 {full_path} 失败: {e}")
 
 # 初始化硬件资源隔离
 def initialize_hardware_isolation():
@@ -166,6 +194,37 @@ def wait_for_container_running(container, timeout=30):
     return False
 
 def assign_container_to_cos(container_id, cos_id):
+    if use_palloc:
+        try:
+            part_name = f"part_{container_id}"
+            palloc_path = os.path.join(palloc_base_path, part_name)
+            palloc_bins_file = os.path.join(palloc_path, "palloc.bins")
+
+            if not os.path.exists(palloc_path):
+                print(f"palloc路径不存在: {palloc_path}，尝试创建...")
+                subprocess.run(f"sudo mkdir -p {palloc_path}", shell=True, check=True)
+
+            if not os.path.exists(palloc_bins_file):
+                print(f"{palloc_bins_file} 不存在，确认palloc cgroup挂载及配置是否正确")
+                return False
+
+            # 如果是LC(cos0)，使用15个group，BE使用1个
+            if cos_id == 0:
+                bins_to_assign = "0-14"
+            else:
+                bins_to_assign = "15"
+            # 写入palloc.bins
+            subprocess.run(f"echo {bins_to_assign} | sudo tee {palloc_bins_file} > /dev/null", shell=True, check=True)
+
+            # 绑定进程
+            pid = client.api.inspect_container(container_id)['State']['Pid']
+            tasks_file = os.path.join(palloc_path, "tasks")
+            subprocess.run(f"echo {pid} | sudo tee -a {tasks_file} > /dev/null", shell=True, check=True)
+
+            print(f"成功为容器 {container_id} 分配 palloc bins {bins_to_assign} 到 {palloc_path}")
+        except Exception as e:
+            print(f"palloc分配失败: {e}")
+
     if cos_id >= len(cos_llc_masks) or cos_llc_masks[cos_id] is None:
         print(f"警告：无法分配 COS{cos_id} 给容器 {container_id}")
         return False
@@ -365,16 +424,16 @@ try:
             print(f"\n--- 测试组合: {lc_task} + {benchmark} ---")
             time.sleep(5)
             
-            if lc_task == "masstree":
-                # Masstree 专用配置
+            if lc_task not in ["memcached", "nginx"]:
+                # Tailbench 专用配置
                 mt_threads = LC_threads[0]  # 使用第一个线程配置
                 mt_rps = LC_rps[0]
                 mt_duration = test_time
                 core_ids = core[0].replace(",", " ")  # 转换为 "0 1 2" 格式
                 be_core = core[2]
                 
-                # 构建 Masstree 命令
-                lc_cmd = f"bash {CONTAINER_WORK_DIR}/benchmarks/masstree/script/masstree.sh {mt_threads} {mt_rps} {mt_duration} {core_ids}"
+                # 构建 Tailbench 命令
+                lc_cmd = f"bash {CONTAINER_WORK_DIR}/benchmarks/{lc_task}/script/{lc_task}.sh {mt_threads} {mt_rps} {mt_duration} {core_ids}"
                 
                 # 启动BE任务容器（如果不是baseline）
                 be_containers = []
@@ -404,6 +463,7 @@ try:
                     cpu_shares=2048
                 )
                 
+                
                 # 清理BE容器
                 for be_container in be_containers:
                     safe_remove_container(be_container)
@@ -413,9 +473,9 @@ try:
                     continue
                 
                 # 验证日志文件是否生成
-                log_file = f"{HOST_WORK_DIR}/benchmarks/masstree/QoS/masstree_0.log"
+                log_file = f"{HOST_WORK_DIR}/benchmarks/{lc_task}/QoS/{lc_task}_0.log"
                 if not os.path.exists(log_file):
-                    print(f"警告: 未找到 Masstree 日志文件 {log_file}")
+                    print(f"警告: 未找到 {lc_task} 日志文件 {log_file}")
             
             else:
                 # 原有 memcached/nginx 的处理逻辑
@@ -501,17 +561,13 @@ try:
             latency_list_99 = []
             violate_list = []
             
-            if lc_task == "masstree":
-                thread_count = LC_threads[0]  # Masstree使用第一个线程配置
+            if lc_task not in ["memcached", "nginx"]:
+                thread_count = LC_threads[0]  # Tailbench使用第一个线程配置
             else:
                 thread_count = LC_threads[1]  # 其他任务使用客户端线程数
             
             for n in range(thread_count):
-                if lc_task == "masstree":
-                    log_file = f"{HOST_WORK_DIR}/benchmarks/masstree/QoS/masstree_{n}.log"
-                else:
-                    log_file = f"{HOST_WORK_DIR}/benchmarks/{lc_task}/QoS/{lc_task}_{n}.log"
-                
+                log_file = f"{HOST_WORK_DIR}/benchmarks/{lc_task}/QoS/{lc_task}_{n}.log"
                 if not os.path.exists(log_file):
                     print(f"警告: 日志文件 {log_file} 不存在")
                     continue
@@ -537,12 +593,12 @@ try:
                 "95th_latency": avg_95,
                 "99th_latency": avg_99,
                 "violate_rate": avg_violate,
-                "throughput": lc_rps if lc_task != "masstree" else mt_rps
+                "throughput": lc_rps if lc_task in ["memcached", "nginx"] else mt_rps
             }
             print(f"测试组合 {lc_task} + {benchmark} 完成，95th延迟: {avg_95:.2f} us")
     
     # 写入文件
-    output_filename = f"{HOST_WORK_DIR}/results1/proof/{LC_tasks[0]}_t{threads}_r{LC_rps[0]}_c{cache_ways}_m{memory_bandwidth_ratio}.json"
+    output_filename = f"{HOST_WORK_DIR}/results_docker/proof/{LC_tasks[0]}_t{threads}_r{LC_rps[0]}_c{cache_ways}_m{memory_bandwidth_ratio}.json"
     os.makedirs(os.path.dirname(output_filename), exist_ok=True)
     with open(output_filename, 'a') as f:
         json.dump(latency_dict, f)

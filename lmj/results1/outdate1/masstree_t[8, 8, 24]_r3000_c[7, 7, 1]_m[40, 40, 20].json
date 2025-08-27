@@ -1,0 +1,148 @@
+{
+    "masstree": {
+        "519.lbm_r": {
+            "95th_latency": 3690.0,
+            "99th_latency": 4091.9999999999995,
+            "violate_rate": 32.29481829262933,
+            "throughput": 3000
+        },
+        "507.cactuBSSN_r": {
+            "95th_latency": 3374.0,
+            "99th_latency": 4019.0,
+            "violate_rate": 14.971573843791193,
+            "throughput": 3000
+        },
+        "500.perlbench_r": {
+            "95th_latency": 2461.0,
+            "99th_latency": 3814.0,
+            "violate_rate": 6.633714822374298,
+            "throughput": 3000
+        },
+        "502.gcc_r": {
+            "95th_latency": 2213.0,
+            "99th_latency": 3694.0,
+            "violate_rate": 5.298450827169841,
+            "throughput": 3000
+        },
+        "503.bwaves_r": {
+            "95th_latency": 639.0,
+            "99th_latency": 1453.0,
+            "violate_rate": 0.1192741453712785,
+            "throughput": 3000
+        },
+        "505.mcf_r": {
+            "95th_latency": 3332.0,
+            "99th_latency": 3971.0,
+            "violate_rate": 14.009092407413123,
+            "throughput": 3000
+        },
+        "508.namd_r": {
+            "95th_latency": 1704.0,
+            "99th_latency": 3698.0,
+            "violate_rate": 4.6625961688935815,
+            "throughput": 3000
+        },
+        "510.parest_r": {
+            "95th_latency": 3479.0,
+            "99th_latency": 3956.0,
+            "violate_rate": 27.969838718811523,
+            "throughput": 3000
+        },
+        "511.povray_r": {
+            "95th_latency": 640.0,
+            "99th_latency": 1455.0,
+            "violate_rate": 0.1013910924955743,
+            "throughput": 3000
+        },
+        "520.omnetpp_r": {
+            "95th_latency": 3543.0,
+            "99th_latency": 4074.0,
+            "violate_rate": 19.93491965822812,
+            "throughput": 3000
+        },
+        "521.wrf_r": {
+            "95th_latency": 637.0,
+            "99th_latency": 1404.0,
+            "violate_rate": 0.11978041194713077,
+            "throughput": 3000
+        },
+        "523.xalancbmk_r": {
+            "95th_latency": 3518.0,
+            "99th_latency": 4030.9999999999995,
+            "violate_rate": 23.445637388763878,
+            "throughput": 3000
+        },
+        "525.x264_r": {
+            "95th_latency": 1026.0,
+            "99th_latency": 3393.0,
+            "violate_rate": 2.206499973210523,
+            "throughput": 3000
+        },
+        "526.blender_r": {
+            "95th_latency": 2774.0,
+            "99th_latency": 3866.0,
+            "violate_rate": 7.357034323826559,
+            "throughput": 3000
+        },
+        "527.cam4_r": {
+            "95th_latency": 644.0,
+            "99th_latency": 1488.0,
+            "violate_rate": 0.10675686231430744,
+            "throughput": 3000
+        },
+        "531.deepsjeng_r": {
+            "95th_latency": 1132.0,
+            "99th_latency": 3509.0,
+            "violate_rate": 3.903162163166918,
+            "throughput": 3000
+        },
+        "538.imagick_r": {
+            "95th_latency": 705.0,
+            "99th_latency": 2683.0,
+            "violate_rate": 1.4560388147640215,
+            "throughput": 3000
+        },
+        "541.leela_r": {
+            "95th_latency": 657.0,
+            "99th_latency": 2184.0,
+            "violate_rate": 1.822469583176519,
+            "throughput": 3000
+        },
+        "544.nab_r": {
+            "95th_latency": 830.0,
+            "99th_latency": 3265.0,
+            "violate_rate": 2.7977768956975835,
+            "throughput": 3000
+        },
+        "548.exchange2_r": {
+            "95th_latency": 641.0,
+            "99th_latency": 1455.0,
+            "violate_rate": 0.10206299627296432,
+            "throughput": 3000
+        },
+        "549.fotonik3d_r": {
+            "95th_latency": 639.0,
+            "99th_latency": 1350.0,
+            "violate_rate": 0.15230235178789484,
+            "throughput": 3000
+        },
+        "554.roms_r": {
+            "95th_latency": 640.0,
+            "99th_latency": 1389.0,
+            "violate_rate": 0.14540233687013243,
+            "throughput": 3000
+        },
+        "557.xz_r": {
+            "95th_latency": 3124.0,
+            "99th_latency": 3927.0,
+            "violate_rate": 9.00689668497824,
+            "throughput": 3000
+        },
+        "baseline": {
+            "95th_latency": 644.0,
+            "99th_latency": 1483.0,
+            "violate_rate": 0.12487948383731848,
+            "throughput": 3000
+        }
+    }
+}

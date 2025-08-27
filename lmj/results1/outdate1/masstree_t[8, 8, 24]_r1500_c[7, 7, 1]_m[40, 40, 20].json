@@ -1,0 +1,152 @@
+{
+    "masstree": {
+        "519.lbm_r": {
+            "95th_latency": 2602.0,
+            "99th_latency": 3656.0,
+            "violate_rate": 8.406690144012645,
+            "throughput": 1500
+        },
+        "507.cactuBSSN_r": {
+            "95th_latency": 1408.0,
+            "99th_latency": 2946.0,
+            "violate_rate": 2.3396181241987497,
+            "throughput": 1500
+        },
+        "500.perlbench_r": {
+            "95th_latency": 865.0,
+            "99th_latency": 2067.0,
+            "violate_rate": 1.8707548798600082,
+            "throughput": 1500
+        },
+        "502.gcc_r": {
+            "95th_latency": 880.0,
+            "99th_latency": 1971.0,
+            "violate_rate": 0.009520484046249198,
+            "throughput": 1500
+        },
+        "503.bwaves_r": {
+            "95th_latency": 697.0,
+            "99th_latency": 1267.0,
+            "violate_rate": 0.20971042686423014,
+            "throughput": 1500
+        },
+        "505.mcf_r": {
+            "95th_latency": 1467.0,
+            "99th_latency": 2919.0,
+            "violate_rate": 2.271981278558614,
+            "throughput": 1500
+        },
+        "508.namd_r": {
+            "95th_latency": 789.0,
+            "99th_latency": 1832.0,
+            "violate_rate": 0.047513934739458516,
+            "throughput": 1500
+        },
+        "510.parest_r": {
+            "95th_latency": 1854.0,
+            "99th_latency": 3034.0,
+            "violate_rate": 4.848751018501922,
+            "throughput": 1500
+        },
+        "511.povray_r": {
+            "95th_latency": 694.0,
+            "99th_latency": 1227.0,
+            "violate_rate": 0.18302218499681575,
+            "throughput": 1500
+        },
+        "520.omnetpp_r": {
+            "95th_latency": 1585.0,
+            "99th_latency": 3098.0,
+            "violate_rate": 3.7822238811587043,
+            "throughput": 1500
+        },
+        "521.wrf_r": {
+            "95th_latency": 692.0,
+            "99th_latency": 1207.0,
+            "violate_rate": 0.1690246970935323,
+            "throughput": 1500
+        },
+        "523.xalancbmk_r": {
+            "95th_latency": 1975.0,
+            "99th_latency": 3313.0,
+            "violate_rate": 4.115281194151713,
+            "throughput": 1500
+        },
+        "525.x264_r": {
+            "95th_latency": 747.0,
+            "99th_latency": 1634.0,
+            "violate_rate": 0.08110177358763651,
+            "throughput": 1500
+        },
+        "526.blender_r": {
+            "95th_latency": 964.0,
+            "99th_latency": 2283.0,
+            "violate_rate": 1.5446563015863726,
+            "throughput": 1500
+        },
+        "527.cam4_r": {
+            "95th_latency": 693.0,
+            "99th_latency": 1258.0,
+            "violate_rate": 0.21001534450514603,
+            "throughput": 1500
+        },
+        "531.deepsjeng_r": {
+            "95th_latency": 748.0,
+            "99th_latency": 1648.0,
+            "violate_rate": 0.08113104834421347,
+            "throughput": 1500
+        },
+        "538.imagick_r": {
+            "95th_latency": 706.0,
+            "99th_latency": 1313.0,
+            "violate_rate": 0.18496441121271973,
+            "throughput": 1500
+        },
+        "541.leela_r": {
+            "95th_latency": 696.0,
+            "99th_latency": 1365.0,
+            "violate_rate": 0.14703329503099907,
+            "throughput": 1500
+        },
+        "544.nab_r": {
+            "95th_latency": 713.0,
+            "99th_latency": 1495.0,
+            "violate_rate": 0.1389937190600823,
+            "throughput": 1500
+        },
+        "548.exchange2_r": {
+            "95th_latency": 696.0,
+            "99th_latency": 1270.0,
+            "violate_rate": 0.1513854744822093,
+            "throughput": 1500
+        },
+        "549.fotonik3d_r": {
+            "95th_latency": 690.0,
+            "99th_latency": 1193.0,
+            "violate_rate": 0.18670680295980985,
+            "throughput": 1500
+        },
+        "554.roms_r": {
+            "95th_latency": 696.0,
+            "99th_latency": 1318.0,
+            "violate_rate": 0.16358826479067579,
+            "throughput": 1500
+        },
+        "557.xz_r": {
+            "95th_latency": 1245.0,
+            "99th_latency": 2709.0,
+            "violate_rate": 2.87476894960592,
+            "throughput": 1500
+        },
+        "baseline": {
+            "95th_latency": 692.0,
+            "99th_latency": 1239.0,
+            "violate_rate": 0.18464271247261482,
+            "throughput": 1500
+        }
+    }
+}{"masstree": {"519.lbm_r": {"95th_latency": 2597.0, "99th_latency": 3650.0, "violate_rate": 8.381987151563825, "throughput": 1500}, "507.cactuBSSN_r": {"95th_latency": 1431.0, "99th_latency": 2994.0, "violate_rate": 2.2533681315010288, "throughput": 1500}, "500.perlbench_r": {"95th_latency": 877.0, "99th_latency": 2090.0, "violate_rate": 1.8294148482314143, "throughput": 1500}, "502.gcc_r": {"95th_latency": 887.0, "99th_latency": 2025.9999999999998, "violate_rate": 1.943808774694167, "throughput": 1500}, "503.bwaves_r": {"95th_latency": 692.0, "99th_latency": 1246.0, "violate_rate": 0.15531702170421827, "throughput": 1500}, "505.mcf_r": {"95th_latency": 1497.0, "99th_latency": 2973.0, "violate_rate": 2.181473295002655, "throughput": 1500}, "508.namd_r": {"95th_latency": 797.0, "99th_latency": 1913.0, "violate_rate": 0.022771829334034543, "throughput": 1500}, "510.parest_r": {"95th_latency": 1864.0, "99th_latency": 3019.0, "violate_rate": 4.808906378122408, "throughput": 1500}, "511.povray_r": {"95th_latency": 692.0, "99th_latency": 1226.0, "violate_rate": 0.17091751011372516, "throughput": 1500}, "520.omnetpp_r": {"95th_latency": 1652.0, "99th_latency": 3202.0, "violate_rate": 3.460339571602564, "throughput": 1500}, "521.wrf_r": {"95th_latency": 694.0, "99th_latency": 1181.0, "violate_rate": 0.17850250446091695, "throughput": 1500}, "523.xalancbmk_r": {"95th_latency": 1973.0, "99th_latency": 3298.0, "violate_rate": 4.12534089439596, "throughput": 1500}, "525.x264_r": {"95th_latency": 748.0, "99th_latency": 1620.0, "violate_rate": 0.08524541855078907, "throughput": 1500}, "526.blender_r": {"95th_latency": 975.0, "99th_latency": 2421.0, "violate_rate": 1.4158748752095138, "throughput": 1500}, "527.cam4_r": {"95th_latency": 690.0, "99th_latency": 1304.0, "violate_rate": 0.14598433848393338, "throughput": 1500}, "531.deepsjeng_r": {"95th_latency": 741.0, "99th_latency": 1627.0, "violate_rate": 0.108797631577468, "throughput": 1500}, "538.imagick_r": {"95th_latency": 704.0, "99th_latency": 1364.0, "violate_rate": 0.18230076984877858, "throughput": 1500}, "541.leela_r": {"95th_latency": 700.0, "99th_latency": 1350.0, "violate_rate": 0.16058109577789073, "throughput": 1500}, "544.nab_r": {"95th_latency": 722.0, "99th_latency": 1549.0, "violate_rate": 0.10976859682576594, "throughput": 1500}, "548.exchange2_r": {"95th_latency": 694.0, "99th_latency": 1235.0, "violate_rate": 0.16541444120553814, "throughput": 1500}, "549.fotonik3d_r": {"95th_latency": 690.0, "99th_latency": 1171.0, "violate_rate": 0.21084436788805438, "throughput": 1500}, "554.roms_r": {"95th_latency": 696.0, "99th_latency": 1256.0, "violate_rate": 0.17566639644040333, "throughput": 1500}, "557.xz_r": {"95th_latency": 1161.0, "99th_latency": 2605.0, "violate_rate": 1.1007730208321935, "throughput": 1500}, "baseline": {"95th_latency": 694.0, "99th_latency": 1240.0, "violate_rate": 0.16548351763384717, "throughput": 1500}}}
+{"masstree": {"519.lbm_r": {"95th_latency": 2567.0, "99th_latency": 3641.0, "violate_rate": 8.599704892243723, "throughput": 1500}, "507.cactuBSSN_r": {"95th_latency": 1379.0, "99th_latency": 2930.0, "violate_rate": 2.448973691360206, "throughput": 1500}, "500.perlbench_r": {"95th_latency": 847.0, "99th_latency": 1995.0, "violate_rate": 0.0008526193275090323, "throughput": 1500}, "502.gcc_r": {"95th_latency": 871.0, "99th_latency": 1988.0, "violate_rate": 0.0019458100253301385, "throughput": 1500}, "503.bwaves_r": {"95th_latency": 694.0, "99th_latency": 1200.0, "violate_rate": 0.17618160146845077, "throughput": 1500}, "505.mcf_r": {"95th_latency": 1492.0, "99th_latency": 2940.0, "violate_rate": 2.2317243723338978, "throughput": 1500}, "508.namd_r": {"95th_latency": 801.0, "99th_latency": 1880.0, "violate_rate": 0.03302663825360259, "throughput": 1500}, "510.parest_r": {"95th_latency": 1859.0, "99th_latency": 3016.0, "violate_rate": 4.862729395312769, "throughput": 1500}, "511.povray_r": {"95th_latency": 693.0, "99th_latency": 1234.0, "violate_rate": 0.2143621683911399, "throughput": 1500}, "520.omnetpp_r": {"95th_latency": 1639.0, "99th_latency": 3170.0, "violate_rate": 3.535348830878152, "throughput": 1500}, "521.wrf_r": {"95th_latency": 696.0, "99th_latency": 1276.0, "violate_rate": 0.18181018849962025, "throughput": 1500}, "523.xalancbmk_r": {"95th_latency": 1962.0, "99th_latency": 3300.0, "violate_rate": 4.173229533022573, "throughput": 1500}, "525.x264_r": {"95th_latency": 746.0, "99th_latency": 1628.0, "violate_rate": 0.09566110119064854, "throughput": 1500}, "526.blender_r": {"95th_latency": 950.0, "99th_latency": 2298.0, "violate_rate": 1.5377238214289082, "throughput": 1500}, "527.cam4_r": {"95th_latency": 694.0, "99th_latency": 1227.0, "violate_rate": 0.16547086963596427, "throughput": 1500}, "531.deepsjeng_r": {"95th_latency": 740.0, "99th_latency": 1619.0, "violate_rate": 0.11923918049031505, "throughput": 1500}, "538.imagick_r": {"95th_latency": 705.0, "99th_latency": 1317.0, "violate_rate": 0.13811143155940922, "throughput": 1500}, "541.leela_r": {"95th_latency": 699.0, "99th_latency": 1294.0, "violate_rate": 0.18853110721801686, "throughput": 1500}, "544.nab_r": {"95th_latency": 716.0, "99th_latency": 1514.0, "violate_rate": 0.1369763854864401, "throughput": 1500}, "548.exchange2_r": {"95th_latency": 694.0, "99th_latency": 1223.0, "violate_rate": 0.18209520387102698, "throughput": 1500}, "549.fotonik3d_r": {"95th_latency": 692.0, "99th_latency": 1200.0, "violate_rate": 0.1813273094602469, "throughput": 1500}, "554.roms_r": {"95th_latency": 696.0, "99th_latency": 1263.0, "violate_rate": 0.16529113599026657, "throughput": 1500}, "557.xz_r": {"95th_latency": 1250.0, "99th_latency": 2722.0, "violate_rate": 2.863684044157581, "throughput": 1500}, "baseline": {"95th_latency": 696.0, "99th_latency": 1244.0, "violate_rate": 0.17247620146490705, "throughput": 1500}}}
+{"masstree": {"519.lbm_r": {"95th_latency": 2629.0, "99th_latency": 3685.0, "violate_rate": 8.178469918652873, "throughput": 1500}, "507.cactuBSSN_r": {"95th_latency": 1358.0, "99th_latency": 2939.0, "violate_rate": 2.449432258470509, "throughput": 1500}, "500.perlbench_r": {"95th_latency": 869.0, "99th_latency": 2082.0, "violate_rate": 1.8462894671039332, "throughput": 1500}, "502.gcc_r": {"95th_latency": 879.0, "99th_latency": 2044.0, "violate_rate": 1.913279021944454, "throughput": 1500}, "503.bwaves_r": {"95th_latency": 695.0, "99th_latency": 1243.0, "violate_rate": 0.1643089907161659, "throughput": 1500}, "505.mcf_r": {"95th_latency": 1474.0, "99th_latency": 2911.0, "violate_rate": 2.2366075889222508, "throughput": 1500}, "508.namd_r": {"95th_latency": 785.0, "99th_latency": 1773.0, "violate_rate": 0.05326324227636921, "throughput": 1500}, "510.parest_r": {"95th_latency": 1860.0, "99th_latency": 3010.0, "violate_rate": 4.82622140173365, "throughput": 1500}, "511.povray_r": {"95th_latency": 692.0, "99th_latency": 1291.0, "violate_rate": 0.1482946775426727, "throughput": 1500}, "520.omnetpp_r": {"95th_latency": 1675.0, "99th_latency": 3196.0, "violate_rate": 3.4065319983645534, "throughput": 1500}, "521.wrf_r": {"95th_latency": 690.0, "99th_latency": 1162.0, "violate_rate": 0.1861417031106784, "throughput": 1500}, "523.xalancbmk_r": {"95th_latency": 1963.0, "99th_latency": 3312.0, "violate_rate": 4.168216927725714, "throughput": 1500}, "525.x264_r": {"95th_latency": 740.0, "99th_latency": 1629.0, "violate_rate": 0.09432193807861111, "throughput": 1500}, "526.blender_r": {"95th_latency": 962.0, "99th_latency": 2298.0, "violate_rate": 1.5218940218914163, "throughput": 1500}, "527.cam4_r": {"95th_latency": 692.0, "99th_latency": 1213.0, "violate_rate": 0.18314300279329432, "throughput": 1500}, "531.deepsjeng_r": {"95th_latency": 739.0, "99th_latency": 1620.0, "violate_rate": 0.09019336196476783, "throughput": 1500}, "538.imagick_r": {"95th_latency": 703.0, "99th_latency": 1327.0, "violate_rate": 0.17131881389586834, "throughput": 1500}, "541.leela_r": {"95th_latency": 696.0, "99th_latency": 1338.0, "violate_rate": 0.15750203943070942, "throughput": 1500}, "544.nab_r": {"95th_latency": 715.0, "99th_latency": 1505.0, "violate_rate": 0.11203228096648443, "throughput": 1500}, "548.exchange2_r": {"95th_latency": 691.0, "99th_latency": 1207.0, "violate_rate": 0.1732148014881122, "throughput": 1500}, "549.fotonik3d_r": {"95th_latency": 696.0, "99th_latency": 1263.0, "violate_rate": 0.11174171109159071, "throughput": 1500}, "554.roms_r": {"95th_latency": 695.0, "99th_latency": 1218.0, "violate_rate": 0.20360854610926446, "throughput": 1500}, "557.xz_r": {"95th_latency": 1214.0, "99th_latency": 2637.0, "violate_rate": 1.0341344742057434, "throughput": 1500}, "baseline": {"95th_latency": 692.0, "99th_latency": 1191.0, "violate_rate": 0.17886531954543428, "throughput": 1500}}}
+{"masstree": {"519.lbm_r": {"95th_latency": 2617.0, "99th_latency": 3659.0, "violate_rate": 8.26095750572207, "throughput": 1500}, "507.cactuBSSN_r": {"95th_latency": 1438.0, "99th_latency": 3022.0, "violate_rate": 2.2108797463075414, "throughput": 1500}, "500.perlbench_r": {"95th_latency": 869.0, "99th_latency": 2126.0, "violate_rate": 1.7790544884177073, "throughput": 1500}, "502.gcc_r": {"95th_latency": 881.0, "99th_latency": 2070.0, "violate_rate": 1.863841597088694, "throughput": 1500}, "503.bwaves_r": {"95th_latency": 693.0, "99th_latency": 1257.0, "violate_rate": 0.17150139353274824, "throughput": 1500}, "505.mcf_r": {"95th_latency": 1475.0, "99th_latency": 2927.0, "violate_rate": 2.244441440570401, "throughput": 1500}, "508.namd_r": {"95th_latency": 807.0, "99th_latency": 1905.0, "violate_rate": 0.030151578951612985, "throughput": 1500}, "510.parest_r": {"95th_latency": 1866.0, "99th_latency": 3033.0, "violate_rate": 4.781147390749859, "throughput": 1500}, "511.povray_r": {"95th_latency": 691.0, "99th_latency": 1234.0, "violate_rate": 0.19673169402056076, "throughput": 1500}, "520.omnetpp_r": {"95th_latency": 1672.0, "99th_latency": 3188.0, "violate_rate": 3.396656188459344, "throughput": 1500}, "521.wrf_r": {"95th_latency": 696.0, "99th_latency": 1277.0, "violate_rate": 0.1513169881217865, "throughput": 1500}, "523.xalancbmk_r": {"95th_latency": 1966.0, "99th_latency": 3300.0, "violate_rate": 4.1637023537964195, "throughput": 1500}, "525.x264_r": {"95th_latency": 747.0, "99th_latency": 1653.0, "violate_rate": 0.08024681231234321, "throughput": 1500}, "526.blender_r": {"95th_latency": 995.0, "99th_latency": 2394.0, "violate_rate": 1.4215667603534952, "throughput": 1500}, "527.cam4_r": {"95th_latency": 693.0, "99th_latency": 1211.0, "violate_rate": 0.18384712293748576, "throughput": 1500}, "531.deepsjeng_r": {"95th_latency": 745.0, "99th_latency": 1651.0, "violate_rate": 0.08635255426766733, "throughput": 1500}, "538.imagick_r": {"95th_latency": 700.0, "99th_latency": 1295.0, "violate_rate": 0.1459362960253861, "throughput": 1500}, "541.leela_r": {"95th_latency": 694.0, "99th_latency": 1295.0, "violate_rate": 0.14784046096131448, "throughput": 1500}, "544.nab_r": {"95th_latency": 712.0, "99th_latency": 1492.0, "violate_rate": 0.08796457742608475, "throughput": 1500}, "548.exchange2_r": {"95th_latency": 692.0, "99th_latency": 1241.0, "violate_rate": 0.18985198041121323, "throughput": 1500}, "549.fotonik3d_r": {"95th_latency": 692.0, "99th_latency": 1209.0, "violate_rate": 0.19738886924340013, "throughput": 1500}, "554.roms_r": {"95th_latency": 692.0, "99th_latency": 1205.0, "violate_rate": 0.20651094732918637, "throughput": 1500}, "557.xz_r": {"95th_latency": 1212.0, "99th_latency": 2660.0, "violate_rate": 1.0223301353802505, "throughput": 1500}, "baseline": {"95th_latency": 698.0, "99th_latency": 1323.0, "violate_rate": 0.15627748017904358, "throughput": 1500}}}
+{"masstree": {"519.lbm_r": {"95th_latency": 2634.0, "99th_latency": 3684.0, "violate_rate": 8.179669809211354, "throughput": 1500}, "507.cactuBSSN_r": {"95th_latency": 1319.0, "99th_latency": 2831.0, "violate_rate": 2.6080052860464518, "throughput": 1500}, "500.perlbench_r": {"95th_latency": 851.0, "99th_latency": 2033.0, "violate_rate": 1.936374548271429, "throughput": 1500}, "502.gcc_r": {"95th_latency": 863.0, "99th_latency": 1937.0, "violate_rate": 0.014294250064113065, "throughput": 1500}, "503.bwaves_r": {"95th_latency": 697.0, "99th_latency": 1305.0, "violate_rate": 0.15463918030064402, "throughput": 1500}, "505.mcf_r": {"95th_latency": 1461.0, "99th_latency": 2889.0, "violate_rate": 2.290746489726581, "throughput": 1500}, "508.namd_r": {"95th_latency": 811.0, "99th_latency": 1936.0, "violate_rate": 0.015504301503059979, "throughput": 1500}, "510.parest_r": {"95th_latency": 1843.0, "99th_latency": 2963.0, "violate_rate": 4.959131297760996, "throughput": 1500}, "511.povray_r": {"95th_latency": 688.0, "99th_latency": 1205.0, "violate_rate": 0.21761785576129414, "throughput": 1500}, "520.omnetpp_r": {"95th_latency": 1638.0, "99th_latency": 3156.0, "violate_rate": 3.5596461637584222, "throughput": 1500}, "521.wrf_r": {"95th_latency": 696.0, "99th_latency": 1251.0, "violate_rate": 0.16015629707789, "throughput": 1500}, "523.xalancbmk_r": {"95th_latency": 1966.0, "99th_latency": 3307.0, "violate_rate": 4.156878669496099, "throughput": 1500}, "525.x264_r": {"95th_latency": 741.0, "99th_latency": 1623.0, "violate_rate": 0.10001033584809152, "throughput": 1500}, "526.blender_r": {"95th_latency": 963.0, "99th_latency": 2350.0, "violate_rate": 1.4792492443510945, "throughput": 1500}, "527.cam4_r": {"95th_latency": 692.0, "99th_latency": 1200.0, "violate_rate": 0.21751701425924982, "throughput": 1500}, "531.deepsjeng_r": {"95th_latency": 739.0, "99th_latency": 1610.0, "violate_rate": 0.0936713523113301, "throughput": 1500}, "538.imagick_r": {"95th_latency": 702.0, "99th_latency": 1307.0, "violate_rate": 0.17153689688792204, "throughput": 1500}, "541.leela_r": {"95th_latency": 700.0, "99th_latency": 1324.0, "violate_rate": 0.15605452630619882, "throughput": 1500}, "544.nab_r": {"95th_latency": 716.0, "99th_latency": 1523.0, "violate_rate": 0.13170167837065422, "throughput": 1500}, "548.exchange2_r": {"95th_latency": 696.0, "99th_latency": 1238.0, "violate_rate": 0.17388356244745956, "throughput": 1500}, "549.fotonik3d_r": {"95th_latency": 696.0, "99th_latency": 1223.0, "violate_rate": 0.17712040092329304, "throughput": 1500}, "554.roms_r": {"95th_latency": 692.0, "99th_latency": 1186.0, "violate_rate": 0.2051673018303466, "throughput": 1500}, "557.xz_r": {"95th_latency": 1158.0, "99th_latency": 2619.0, "violate_rate": 1.105932126127663, "throughput": 1500}, "baseline": {"95th_latency": 693.0, "99th_latency": 1239.0, "violate_rate": 0.17121451095951679, "throughput": 1500}}}

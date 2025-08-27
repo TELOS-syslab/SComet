@@ -5,22 +5,19 @@ if ! systemctl is-active --quiet docker; then
     sudo systemctl start docker
 fi
 
-t_values=("32,0,1" "32,0,2" "32,0,4" "32,0,8")
-# t_values=("32,0,8")
-# r_values=("17000" "17200" "17400" "17600" "17800" "18000")
-# r_values=("50000" "51000" "52000" "53000" "54000" "55000")
-# r_values=("1000" "1500" "2000" "2500" "3000")
-r_values=("4000")
-# r_values=("1000" "1500")
-# r_values=("60000" "70000" "80000" "90000" "100000" "900")
-#r_values=("56000" "57000" "58000")
-c_values=("14,0,1")
-m_values=("100,0,10")
-
 num_loops=10
 test_time=120  # 测试持续时间（秒）
+mkdir -p /home/wjy/SComet/results_docker/proof
 
-mkdir -p /home/wjy/SComet/results1/proof
+# lc_task="xapian"
+# r_values=("600")
+
+lc_task="masstree"
+r_values=("1000" "1500" "2000" "2500" "3000" "3500" "4000" "4500"  "5000")
+
+t_values=("8,0,1")
+c_values=("14,0,1") 
+m_values=("100,0,10")
 
 for ((i=0; i<num_loops; i++)); do
     for t in "${t_values[@]}"; do
@@ -33,7 +30,7 @@ for ((i=0; i<num_loops; i++)); do
                     docker rm -f $(docker ps -aq) &> /dev/null
 
                     echo "运行测试..."
-                    sudo python3 /home/wjy/SComet/docker_test.py -T ${test_time} -t ${t} -r ${r} -c ${c} -m ${m} --lc masstree
+                    sudo python3 /home/wjy/SComet/docker_test.py -T ${test_time} -t ${t} -r ${r} -c ${c} -m ${m} --lc ${lc_task}
 
                     echo "等待 5 秒后继续..."
                     sleep 5

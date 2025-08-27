@@ -1,0 +1,1 @@
+{"xapian": {"519.lbm_r": {"95th_latency": 6142.0, "99th_latency": 10740.0, "violate_rate": 1.67147089968693, "throughput": 500}, "baseline": {"95th_latency": 4761.0, "99th_latency": 7529.0, "violate_rate": 0.17952510492076926, "throughput": 500}}}
