@@ -13,8 +13,8 @@ from container import *
 class Allocater:
     def __init__(self, benchmark_set_, lc_tasks_, be_tasks_, ip_):
         self.benchmark_set = benchmark_set_
-        self.lc_containers = []
-        self.be_containers = []
+        self.lc_containers = {}
+        self.be_containers = {}
         self.latency_result = {}
         self.violate_result = {}
         self.lc_tasks = lc_tasks_
@@ -88,7 +88,7 @@ class Allocater:
 
     def get_QoS_status(self):
         slack_dict = {}
-        for index in range(len(self.lc_containers)):
+        for index in self.lc_containers:
             container_instance = self.lc_containers[index]
             self.get_lc_latency(container_instance)
 
@@ -127,14 +127,13 @@ class Allocater:
     def prune(self):
         finished_lc = []
         finished_be = []
-        remaining_lc = []
-        remaining_be = []
+        remaining_lc = {}
+        remaining_be = {}
 
-        for container in self.lc_containers:
-            if (container.running and container.running.poll() is not None) or :
+        for index, container in self.lc_containers.items():
+            if (container.running and container.running.poll() is not None) or container.task == "killed":
                 print(f'lc task {container.get_running_task()} finished')
                 finished_lc.append(container.get_running_task())
-                index = container.index
                 if index in self.resource_allocation:
                     alloc = self.resource_allocation.pop(index)
                     self.available_resources['CPU'].extend(alloc['CPU'])
@@ -142,14 +141,13 @@ class Allocater:
                     self.available_resources['MBW'] += alloc['MBW']
                 container.remove()
             else:
-                remaining_lc.append(container)
+                remaining_lc[index] = container
         self.lc_containers = remaining_lc
 
-        for container in self.be_containers:
-            if container.running and container.running.poll() is not None:
+        for index, container in self.be_containers.items():
+            if (container.running and container.running.poll() is not None) or container.task == "killed":
                 print(f'be task {container.get_running_task()} finished')
                 finished_be.append(container.get_running_task())
-                index = container.index
                 if index in self.resource_allocation:
                     alloc = self.resource_allocation.pop(index)
                     self.available_resources['CPU'].extend(alloc['CPU'])
@@ -157,17 +155,15 @@ class Allocater:
                     self.available_resources['MBW'] += alloc['MBW']
                 container.remove()
             else:
-                remaining_be.append(container)
+                remaining_be[index] = container
         self.be_containers = remaining_be
 
         self.available_resources['CPU'].sort()
-
         return finished_lc, finished_be
 
     def unused_index(self):
-        all_containers = self.lc_containers + self.be_containers
         for i in range(self.max_container):
-            if all(int(c.name[-1]) != i for c in all_containers):
+            if i not in list(self.lc_containers) + list(self.be_containers):
                 return i
         return None
 
@@ -205,7 +201,7 @@ class Allocater:
         self.available_resources['MBW'] = 0
 
         container.run_task(self.benchmark_set, task, commands)
-        self.lc_containers.append(container)
+        self.lc_containers[index] = container
         return f'lc_container{index}'
 
     def run_be_task(self, task, commands):
@@ -237,16 +233,13 @@ class Allocater:
         self.available_resources['MBW'] -= 10
 
         container.run_task(self.benchmark_set, task, commands)
-        self.be_containers.append(container)
+        self.be_containers[index] = container
         return f'be_container{index}'
 
     def assign_all(self):
-        all_containers = self.lc_containers + self.be_containers
-        for container in all_containers:
-            index = container.index
-            if index not in self.resource_allocation.keys():
+        for index, container in list(self.lc_containers.items()) + list(self.be_containers.items()):
+            if index not in self.resource_allocation:
                 continue
-
             alloc = self.resource_allocation[index]
             cpu = alloc["CPU"]
             llc = alloc["LLC"]
@@ -269,7 +262,7 @@ class Allocater:
         if QoS_status == 1:
             if self.release_lc_resource(slack_list):
                 if self.be_containers:
-                    be_index = self.be_containers[0].index
+                    be_index = list(self.be_containers)[0]
                     if be_index not in self.resource_allocation:
                         self.resource_allocation[be_index] = {'CPU': [], 'LLC': 0, 'MBW': 0}
                     self.resource_allocation[be_index]['CPU'].extend(self.available_resources['CPU'])
@@ -289,8 +282,7 @@ class Allocater:
                     return 1
                 if self.release_lc_resource(slack_list):
                     continue
-                for be_container in self.be_containers:
-                    be_index = be_container.index
+                for be_index, be_container in self.be_containers.items():
                     if self.release_container_resource(be_index):
                         break
             print("Warning! QoS violation but no more resource!")
@@ -365,3 +357,20 @@ class Allocater:
             self.assign_all()
             return True
         return False
+
+    def kill_task(self, index):
+        if index in self.lc_containers:
+            self.lc_containers[index].task = "killed"
+        if index in self.be_containers:
+            self.be_containers[index].task = "killed"
+        return self.prune()
+
+    def kill_all(self):
+        for index in list(self.lc_containers) + list(self.be_containers):
+            self.kill_task(index)
+
+    def remove_newest_be_task(self):
+        if not self.be_containers:
+            return None
+        return self.kill_task(list(self.be_containers)[-1])
+

@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-import allocater
 import container
 import time
 import math
@@ -7,30 +6,35 @@ import sys
 import json
 
 sys.path.append('/home/wjy/SComet')
-import exe
+from config import *
+from container import *
+from allocater import *
 
 lc_task_example = {
     "memcached": {
         "threads": 8,
         "max_load": 1000,
         "QoS": 1000,
+        "commands": [],
     },
     "nginx": {
         "threads": 8,
         "max_load": 1000,
         "QoS": 1000,
+        "commands": [],
     },
 }
 
 be_task_example = {
     "lbm": {
         "threads": 8,
+        "commands": [],
     },
 }
 
 
 class Scheduler:
-    def __init__(self, benchmark_set_, lc_tasks_, be_tasks_, ip_list_):
+    def __init__(self, benchmark_set_, ip_list_, lc_tasks_=lc_task_example, be_tasks_=be_task_example):
         self.benchmark_set = benchmark_set_
         self.lc_tasks = lc_tasks_
         self.be_tasks = be_tasks_
@@ -43,85 +47,84 @@ class Scheduler:
     def lc_algorithm(self):
         max_slack = 0
         max_ip = None
-        for ip in self.node_dict.keys():
+        for ip in self.node_dict:
             QoS_status, slack_list = self.node_dict[ip].get_QoS_status()
-            if not slack_list:
-                return ip
+            if not slack_list and self.lc_tasks:
+                return list(self.lc_tasks)[0], ip
             if QoS_status == 1:
                 if max_slack < slack_list[0][1]["slack"]:
                     max_slack = slack_list[0][1]["slack"]
                     max_ip = ip
-        if max_ip:
-            return max_ip
+        if max_ip and self.lc_tasks:
+            return list(self.lc_tasks)[0], max_ip
         print("Warning! No available node for LC task")
-        return None
+        return None, None
 
     def be_algorithm(self):
-        available = []
-        for ip in self.node_dict.keys():
+        max_slack = 0
+        max_ip = None
+        for ip in self.node_dict:
             QoS_status, slack_list = self.node_dict[ip].get_QoS_status()
-            if QoS_status == -1 and self.node_dict[ip].be_containers:
-                self.be_tasks.append(self.node_dict[ip].be_containers[-1].task)
-                self.node_dict[ip].be_containers[-1].remove()
-                del self.node_dict[ip].be_containers[-1]
-                time.sleep(60)
-            elif QoS_status == 1:
-                available.append(ip)
-        if available and self.be_tasks:
-            be_host = available[len(self.be_tasks) % len(available)]
-            return self.be_tasks[0], be_host
+            if QoS_status == 1:
+                if max_slack < slack_list[0][1]["slack"]:
+                    max_slack = slack_list[0][1]["slack"]
+                    max_ip = ip
+        if max_ip and self.be_tasks:
+            return list(self.be_tasks)[0], max_ip
         return None, None
 
     def prune(self):
-        for ip in self.node_dict.keys():
+        for ip in self.node_dict:
             finished_lc, finished_be = self.node_dict[ip].prune()
-            self.lc_tasks += finished_lc
+            for task in finished_lc:
+                self.lc_tasks[task] = self.all_lc[task]
+
+    def reallocate(self):
+        for ip in self.node_dict:
+            result = self.node_dict[ip].reallocate()
+            if result == -1:
+                print(f"Remove BE tasks from {ip}")
+                self.node_dict[ip].remove_newest_be_task()
 
     def run(self):
         start_time = time.time()
         while True:
             time.sleep(10)
-            print(f'\ntime {(time.time() - start_time}:')
+            print(f'\ntime {time.time() - start_time}:')
             self.prune()
-            for ip in self.node_dict.keys():
+            self.reallocate()
+
+            for ip in self.node_dict:
                 print(f"lc on {ip}: ", self.node_dict[ip].lc_containers)
                 print(f"be on {ip}: ", self.node_dict[ip].be_containers)
 
-            if self.lc_tasks:
-                lc = self.lc_tasks.pop()
-                lc_host = self.lc_target[lc]
-                self.node_dict[lc_host].lc_containers.append(
-                    container.Container('scomet', 'lc_container%d' % self.node_dict[lc_host].unused_lc_index(), lc_host,
-                                        self.passwd[lc_host]))
-                rps_delta = int(time.time() - start_time) % 10800
-                rps_delta = 1 - (abs(rps_delta - 5400) / 5400)
-                rps = int(self.max_load[lc_host][lc] * rps_delta * 3 / 4 + self.max_load[lc_host][lc] / 4)
-                self.node_dict[lc_host].lc_containers[-1].run_task(self.benchmark_set, lc,
-                                                                   '%d %d' % (rps, self.threads[lc_host][lc]))
-                time.sleep(60)
-                continue
-            be, be_host = self.algorithm()
+            while self.lc_tasks:
+                lc, lc_ip = self.lc_algorithm()
+                if not lc:
+                    continue
+                self.node_dict[lc_ip].run_lc_task(lc, self.lc_tasks[lc]["commands"])
+                self.lc_tasks.pop(lc)
+                time.sleep(10)
+
+            be, be_ip = self.be_algorithm()
             if be:
-                self.be_tasks.remove(be)
-                self.node_dict[be_host].be_containers.append(
-                    container.Container('scomet', 'be_container%d' % self.node_dict[be_host].unused_be_index(), be_host,
-                                        self.passwd[be_host]))
-                self.node_dict[be_host].be_containers[-1].run_task(self.benchmark_set, be)
+                self.node_dict[be_ip].run_be_task(be, self.be_tasks[be]["commands"])
+                self.be_tasks.pop(be)
                 print('be task remain %d :' % len(self.be_tasks), self.be_tasks)
-                time.sleep(60)
+                time.sleep(10)
+
             if not self.be_tasks:
                 finished = True
-                for ip in self.node_dict.keys():
+                for ip in self.node_dict:
                     if self.node_dict[ip].be_containers:
                         finished = False
                 if finished:
                     print('finished')
-                    for ip in self.node_dict.keys():
+                    for ip in self.node_dict:
                         print(ip)
-                        with open('%s_latency_result.txt' % ip, mode='w') as result_f:
+                        with open(f'{ip}_latency_result.txt', mode='w') as result_f:
                             result_f.write(json.dumps(self.node_dict[ip].latency_result))
-                        with open('%s_violate_result.txt' % ip, mode='w') as result_f:
+                        with open(f'{ip}_violate_result.txt', mode='w') as result_f:
                             result_f.write(json.dumps(self.node_dict[ip].violate_result))
-                        for container_instance in self.node_dict[ip].lc_containers + self.node_dict[ip].be_containers:
-                            container_instance.remove()
+                        self.node_dict[ip].kill_all()
                     break

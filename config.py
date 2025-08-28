@@ -13,8 +13,10 @@ CPU_cores = {
 }
 
 nodes = {
-    '172.17.1.36': {'user': 'wjy', 'passwd': 'gis.xen'},
-    '172.17.4.149': {'user': 'root', 'passwd': 'gis.xen'}
+    '172.17.1.73': {'user': 'wjy', 'passwd': 'gis.xen'}, # mars
+    '172.17.1.74': {'user': 'wjy', 'passwd': 'gis.xen'}, # mercury
+    '172.17.1.75': {'user': 'wjy', 'passwd': 'gis.xen'}, # jupiter
+    '172.17.1.78': {'user': 'wjy', 'passwd': 'gis.xen'}, # neptune
 }
 
 def run_on_node(ip, instr):
