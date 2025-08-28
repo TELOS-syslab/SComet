@@ -8,7 +8,7 @@ import json
 sys.path.append('/home/wjy/SComet')
 from config import *
 from container import *
-from allocater import *
+from allocator import *
 
 lc_task_example = {
     "memcached": {
@@ -42,7 +42,8 @@ class Scheduler:
         self.all_be = be_tasks_
         self.node_dict = {}
         for ip in ip_list_:
-            self.node_dict[ip] = Allocater(self.benchmark_set, lc_tasks_, be_tasks_, ip)
+            print(f"Generating Allocator for {ip}")
+            self.node_dict[ip] = Allocator(self.benchmark_set, lc_tasks_, be_tasks_, ip)
 
     def lc_algorithm(self):
         max_slack = 0

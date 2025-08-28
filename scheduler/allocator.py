@@ -10,7 +10,7 @@ from config import *
 from container import *
 
 
-class Allocater:
+class Allocator:
     def __init__(self, benchmark_set_, lc_tasks_, be_tasks_, ip_):
         self.benchmark_set = benchmark_set_
         self.lc_containers = {}
@@ -184,7 +184,7 @@ class Allocater:
             print(f"Cannot add more than {self.max_container} tasks to {self.ip}")
             return None
 
-        container = Container('scomet', f'lc_container{index}', index, self.ip, index)
+        container = Container('lc_container:v1', f'lc_container{index}', index, self.ip, index)
 
         allocated_cpu = self.available_resources['CPU'][:]
         allocated_llc = self.available_resources['LLC']
@@ -216,7 +216,7 @@ class Allocater:
             print(f"Cannot add more than {self.max_container} tasks to {self.ip}")
             return None
 
-        container = Container('scomet', f'be_container{index}', index, self.ip, index)
+        container = Container('be_container:v1', f'be_container{index}', index, self.ip, index)
 
         allocated_cpu = [self.available_resources['CPU'][0]]
         allocated_llc = self.get_lowest_llc_line()

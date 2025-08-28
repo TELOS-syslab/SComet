@@ -8,7 +8,7 @@ import json
 sys.path.append('/home/wjy/SComet')
 from config import *
 from container import *
-from allocater import *
+from allocator import *
 import scheduler
 
 LC_TASKS = ['masstree']
