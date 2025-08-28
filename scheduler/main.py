@@ -72,5 +72,5 @@ for root, dirs, files in os.walk(f'/home/wjy/SComet/{benchmark_set}/script'):
 
 ip_list = ['172.17.1.73', '172.17.1.74']
 
-PARTIES_scheduler = scheduler.(benchmark_set, ip_list, lc_tasks, be_tasks)
+PARTIES_scheduler = scheduler.Scheduler(benchmark_set, ip_list, lc_tasks, be_tasks)
 PARTIES_scheduler.run()

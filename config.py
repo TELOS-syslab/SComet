@@ -3,6 +3,7 @@ import os
 import re
 import time
 import signal
+import shlex
 
 ROOT = "/home/wjy/SComet"
 curr_ip = "162.105.86.11"

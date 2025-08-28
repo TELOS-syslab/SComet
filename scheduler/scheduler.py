@@ -42,7 +42,7 @@ class Scheduler:
         self.all_be = be_tasks_
         self.node_dict = {}
         for ip in ip_list_:
-            self.node_dict[ip] = allocater.Allocater(self.benchmark_set, lc_tasks_, be_tasks_, ip)
+            self.node_dict[ip] = Allocater(self.benchmark_set, lc_tasks_, be_tasks_, ip)
 
     def lc_algorithm(self):
         max_slack = 0
