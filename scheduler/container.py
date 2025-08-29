@@ -19,8 +19,8 @@ class Container:
         run_on_node(self.ip, f'docker stop {self.name}').wait()
         run_on_node(self.ip, f'docker rm {self.name}').wait()
 
-        proc = run_on_node(self.ip,
-                           f'docker run -id -v /home/wjy/SComet:/home/wjy/SComet --privileged --name {self.name} {self.image} /bin/bash')
+        command = f'docker run -id -v /home/wjy/SComet:/home/wjy/SComet --privileged --name {self.name} {self.image} /bin/bash'
+        proc = run_on_node(self.ip, command)
         out, err = proc.communicate()
         self.id = out.decode().strip()
 
@@ -30,13 +30,13 @@ class Container:
         print(f"Container {self.name}@{self.ip} ID: {self.id}, PID: {self.pid}")
 
         self.cos = f"COS{cos_}"
-        run_on_node(ip, f"sudo mkdir -p /sys/fs/cgroup/cpuset/{self.cos}").wait()
-        run_on_node(ip, f"echo 0 | sudo tee /sys/fs/cgroup/cpuset/{self.cos}/cpuset.mems").wait()
-        run_on_node(ip, f"echo 1 | sudo tee /sys/fs/cgroup/cpuset/{self.cos}/cgroup.clone_children").wait()
-        run_on_node(ip, f"echo {self.pid} | sudo tee /sys/fs/cgroup/cpuset/{self.cos}/tasks").wait()
-        run_on_node(ip, f"sudo mkdir -p /sys/fs/resctrl/{self.cos}").wait()
-        run_on_node(ip, f"echo 1 | sudo tee /sys/fs/resctrl/{self.cos}/cgroup.clone_children").wait()
-        run_on_node(ip, f"echo {self.pid} | sudo tee /sys/fs/resctrl/{self.cos}/tasks").wait()
+        run_on_node(self.ip, f"sudo mkdir -p /sys/fs/cgroup/cpuset/{self.cos}").wait()
+        run_on_node(self.ip, f"echo 0 | sudo tee /sys/fs/cgroup/cpuset/{self.cos}/cpuset.mems").wait()
+        run_on_node(self.ip, f"echo 1 | sudo tee /sys/fs/cgroup/cpuset/{self.cos}/cgroup.clone_children").wait()
+        run_on_node(self.ip, f"echo {self.pid} | sudo tee /sys/fs/cgroup/cpuset/{self.cos}/tasks").wait()
+        run_on_node(self.ip, f"sudo mkdir -p /sys/fs/resctrl/{self.cos}").wait()
+        run_on_node(self.ip, f"echo 1 | sudo tee /sys/fs/resctrl/{self.cos}/cgroup.clone_children").wait()
+        run_on_node(self.ip, f"echo {self.pid} | sudo tee /sys/fs/resctrl/{self.cos}/tasks").wait()
         print(f"[{self.name}@{self.ip}] bind to COS {self.cos}")
 
     def __repr__(self):
@@ -48,11 +48,31 @@ class Container:
         run_on_node(self.ip, f'docker rm {self.name}').wait()
 
     def copy_from_container(self, src_, dest_):
-        run_on_node(self.ip, f"docker cp {self.name}:{src_} {dest_}").wait()
+        os.makedirs(os.path.dirname(dest_), exist_ok=True)
+        cmd = f'docker cp "{self.name}:{src_}" "{dest_}"'
+        try:
+            ret = run_on_node(self.ip, cmd).wait()
+            if ret != 0:
+                print(f"[Warning] Failed to copy from container: {cmd}, exit code {ret}")
+        except Exception as e:
+            print(f"[Warning] Exception when copying from container: {cmd}, error: {e}")
 
     def copy_to_container(self, src_, dest_):
-        run_on_node(self.ip, f"docker cp {src_} {self.name}:{dest_}").wait()
+        container_dir = os.path.dirname(dest_)
+        mkdir_cmd = f'docker exec {self.name} mkdir -p {container_dir}'
+        try:
+            run_on_node(self.ip, mkdir_cmd).wait()
+        except Exception as e:
+            print(f"[Warning] Failed to create directory in container: {mkdir_cmd}, error: {e}")
 
+        cmd = f'docker cp "{src_}" "{self.name}:{dest_}"'
+        try:
+            ret = run_on_node(self.ip, cmd).wait()
+            if ret != 0:
+                print(f"[Warning] Failed to copy to container: {cmd}, exit code {ret}")
+        except Exception as e:
+            print(f"[Warning] Exception when copying to container: {cmd}, error: {e}")
+    
     def get_running_benchmark_set(self):
         return self.benchmark_set
 

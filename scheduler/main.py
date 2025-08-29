@@ -26,18 +26,6 @@ lc_tasks = {
         "QoS": 3000,
         "commands": ['/home/wjy/SComet/benchmarks/test/script/masstree_real_time.sh 8 1000 600'],
     },
-    "masstree-1500": {
-        "threads": 8,
-        "max_load": 1500,
-        "QoS": 3000,
-        "commands": ['/home/wjy/SComet/benchmarks/test/script/masstree_real_time.sh 8 1500 600'],
-    },
-    "masstree-2000": {
-        "threads": 8,
-        "max_load": 2000,
-        "QoS": 3000,
-        "commands": ['/home/wjy/SComet/benchmarks/test/script/masstree_real_time.sh 8 2000 600'],
-    },
 }
 
 be_tasks = {

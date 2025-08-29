@@ -4,6 +4,7 @@ import time
 import math
 import sys
 import json
+import copy
 
 sys.path.append('/home/wjy/SComet')
 from config import *
@@ -38,8 +39,8 @@ class Scheduler:
         self.benchmark_set = benchmark_set_
         self.lc_tasks = lc_tasks_
         self.be_tasks = be_tasks_
-        self.all_lc = lc_tasks_
-        self.all_be = be_tasks_
+        self.all_lc = copy.deepcopy(lc_tasks_)
+        self.all_be = copy.deepcopy(be_tasks_)
         self.node_dict = {}
         for ip in ip_list_:
             print(f"Generating Allocator for {ip}")
@@ -50,7 +51,7 @@ class Scheduler:
         max_ip = None
         for ip in self.node_dict:
             QoS_status, slack_list = self.node_dict[ip].get_QoS_status()
-            if not slack_list and self.lc_tasks:
+            if not self.node_dict[ip].lc_containers and self.lc_tasks:
                 return list(self.lc_tasks)[0], ip
             if QoS_status == 1:
                 if max_slack < slack_list[0][1]["slack"]:
@@ -90,7 +91,7 @@ class Scheduler:
     def run(self):
         start_time = time.time()
         while True:
-            time.sleep(10)
+            time.sleep(5)
             print(f'\ntime {time.time() - start_time}:')
             self.prune()
             self.reallocate()
@@ -105,14 +106,14 @@ class Scheduler:
                     continue
                 self.node_dict[lc_ip].run_lc_task(lc, self.lc_tasks[lc]["commands"])
                 self.lc_tasks.pop(lc)
-                time.sleep(10)
+                time.sleep(5)
 
             be, be_ip = self.be_algorithm()
             if be:
                 self.node_dict[be_ip].run_be_task(be, self.be_tasks[be]["commands"])
                 self.be_tasks.pop(be)
                 print('be task remain %d :' % len(self.be_tasks), self.be_tasks)
-                time.sleep(10)
+                time.sleep(5)
 
             if not self.be_tasks:
                 finished = True
