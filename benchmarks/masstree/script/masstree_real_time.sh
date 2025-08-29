@@ -1,4 +1,4 @@
-# !/bin/bash
+#!/bin/bash
 
 NTHREADS=${1:-1}
 QPS=${2:-2000}

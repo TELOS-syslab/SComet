@@ -1,11 +1,5 @@
-TBENCH_MAXREQS = 120000
-TBENCH_WARMUPREQS = 7000
+TBENCH_MAXREQS = 1200000
+TBENCH_WARMUPREQS = 14000
+TBENCH_MINSLEEPNS = 10000
 1/1 mycsba/masstree
-3: now getting
-6: now getting
-4: now getting
-2: now getting
-1: now getting
-5: now getting
-7: now getting
 0: now getting

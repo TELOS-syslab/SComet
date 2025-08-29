@@ -21,13 +21,14 @@ nodes = {
 }
 
 def run_on_node(ip, instr):
-    remote_cmd = f"bash -c {shlex.quote(instr)}"
     command = (
         f"sshpass -p {shlex.quote(nodes[ip]['passwd'])} "
         f"ssh -o StrictHostKeyChecking=no {shlex.quote(nodes[ip]['user'])}@{ip} "
-        f"{remote_cmd}"
+        f"{instr}"
     )
+    # print(command)
     return subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, preexec_fn=os.setsid)
+
 
 def copy_from_node(ip, src, dest):
     remote_src = f"{nodes[ip]['user']}@{ip}:{src}"

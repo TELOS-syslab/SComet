@@ -4,6 +4,7 @@ import math
 import sys
 import os
 import numpy
+import copy
 
 sys.path.append('/home/wjy/SComet')
 from config import *
@@ -17,8 +18,8 @@ class Allocator:
         self.be_containers = {}
         self.latency_result = {}
         self.violate_result = {}
-        self.lc_tasks = lc_tasks_
-        self.be_tasks = be_tasks_
+        self.lc_tasks = copy.deepcopy(lc_tasks_)
+        self.be_tasks = copy.deepcopy(be_tasks_)
         self.ip = ip_
         self.max_container = 8
 
@@ -33,14 +34,18 @@ class Allocator:
 
     def get_lc_latency(self, container_instance):
         benchmark = container_instance.task
+        base_benchmark = container_instance.task.split('-')[0]
         print(f'get latency {benchmark}')
-        if benchmark not in self.lc_tasks.keys():
+        if benchmark not in self.lc_tasks:
+            print(f"Unavailable benchmark {benchmark}")
+            print("lc_task:")
+            print(self.lc_tasks)
             return None, None
 
         # copy from remote node
-        log_path = f'/home/wjy/SComet/{self.benchmark_set}/QoS/{container_instance.ip}.{benchmark}.log'
-        if benchmark in ['masstree', 'silo', 'sphinx']:
-            result_path = f'/home/wjy/SComet/benchmarks/{benchmark}/QoS/{benchmark}_0.log'
+        log_path = f'/home/wjy/SComet/benchmarks/{self.benchmark_set}/QoS/{container_instance.ip}.{benchmark}_0.log'
+        if base_benchmark in ['masstree', 'silo', 'sphinx']:
+            result_path = f'/home/wjy/SComet/benchmarks/{base_benchmark}/QoS/lc_latency_realtime.log'
             container_instance.copy_from_container(result_path, log_path)
         else:
             print(f"Benchmark {self.benchmark_set}-{benchmark} not supported")
@@ -50,41 +55,56 @@ class Allocator:
             copy_from_node(container_instance.ip, log_path, log_path)
             print('finish sending latency result')
 
-        output = None
-        violate = None
-        prev_latency = 0.0
         qos_threshold = self.lc_tasks[benchmark]["QoS"]
         if not os.path.exists(log_path):
+            print("No latency results now")
             return None, None
         with open(log_path, 'r') as f:
             lines = f.readlines()
+
+        self.latency_result.setdefault(benchmark, [])
+        self.violate_result.setdefault(benchmark, [])
+        phase_output = None
+        phase_violate = None
+        prev_latency = 0.0
+
         for line in lines:
             line = line.strip()
-            if 'percentile' in line and ':' in line:
-                try:
-                    percentile_str, latency_str = line.split('percentile:')
-                    percentile = int(
-                        percentile_str.strip().replace('th', '').replace('st', '').replace('nd', '').replace('rd', ''))
-                    latency = float(latency_str.strip())
-                except ValueError:
-                    continue
+            if line.startswith("phase:"):
+                if phase_output is not None:
+                    self.latency_result[benchmark].append(phase_output)
+                    self.violate_result[benchmark].append(phase_violate)
+                phase_output = None
+                phase_violate = None
+                prev_latency = 0.0
+                continue
 
-                if percentile == 99:
-                    output = latency
-                if prev_latency < qos_threshold and latency >= qos_threshold:
-                    violate = round(100 - percentile, 2)
-                if latency < qos_threshold and percentile == 100:
-                    violate = 0
-                prev_latency = latency
+            if not line or line.startswith("svc") or line.startswith("end2end"):
+                continue
+            match = re.match(r'(\d+)(?:st|nd|rd|th)? percentile:\s*([\d\.Ee+-]+)', line)
+            if not match:
+                continue
 
-        if benchmark not in self.latency_result:
-            self.latency_result[benchmark] = []
-        if benchmark not in self.violate_result:
-            self.violate_result[benchmark] = []
-        self.latency_result[benchmark].append(output)
-        self.violate_result[benchmark].append(violate)
+            percentile = int(match.group(1))
+            latency = float(match.group(2))
+            if percentile == 99:
+                phase_output = latency
+            if prev_latency < qos_threshold and latency >= qos_threshold:
+                phase_violate = round(100 - percentile, 2)
+            if latency < qos_threshold and percentile == 100:
+                phase_violate = 0
+            prev_latency = latency
 
-        return output, violate
+        if phase_output is not None:
+            self.latency_result[benchmark].append(phase_output)
+            self.violate_result[benchmark].append(phase_violate)
+
+        print("latency:")
+        print(self.latency_result[benchmark][-10:])
+        print("violate:")
+        print(self.latency_result[benchmark][-10:])
+
+        return
 
     def get_QoS_status(self):
         slack_dict = {}
@@ -93,7 +113,11 @@ class Allocator:
             self.get_lc_latency(container_instance)
 
             benchmark = container_instance.task
+            if benchmark not in self.latency_result:
+                continue
             latencies = self.latency_result[benchmark]
+            if len(latencies) == 0:
+                continue
             curr_latency = latencies[-1]
             prev_latency = latencies[-2] if len(latencies) > 1 else latencies[-1]
 
