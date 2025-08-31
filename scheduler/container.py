@@ -14,12 +14,15 @@ class Container:
         self.ip = ip_
         self.benchmark_set = ''
         self.task = ''
+        self.core_list = ''
+        self.schemata_line = ''
         self.running = None
         self.commands = None
         run_on_node(self.ip, f'docker stop {self.name}').wait()
         run_on_node(self.ip, f'docker rm {self.name}').wait()
 
-        command = f'docker run -id -v /home/wjy/SComet:/home/wjy/SComet --privileged --name {self.name} {self.image} /bin/bash'
+        command = f'docker run -id -v /home/wjy/:/home/wjy/ --privileged --name {self.name} {self.image} /bin/bash'
+        print(command)
         proc = run_on_node(self.ip, command)
         out, err = proc.communicate()
         self.id = out.decode().strip()
@@ -37,10 +40,10 @@ class Container:
         run_on_node(self.ip, f"sudo mkdir -p /sys/fs/resctrl/{self.cos}").wait()
         run_on_node(self.ip, f"echo 1 | sudo tee /sys/fs/resctrl/{self.cos}/cgroup.clone_children").wait()
         run_on_node(self.ip, f"echo {self.pid} | sudo tee /sys/fs/resctrl/{self.cos}/tasks").wait()
-        print(f"[{self.name}@{self.ip}] bind to COS {self.cos}")
+        # print(f"[{self.name}@{self.ip}] bind to COS {self.cos}")
 
     def __repr__(self):
-        return f"[{self.name}@{self.ip}]: {self.task}"
+        return f"[{self.name}@{self.ip}]: {self.task}\nCores: {self.core_list}\n{self.schemata_line}"
 
     def remove(self):
         print(f'Container {self.name}@{self.ip} remove')
@@ -92,17 +95,18 @@ class Container:
 
     def run(self, command_, update_running=True):
         print(f'Container {self.name}@{self.ip} run {command_}')
+        running = run_on_node(self.ip, f'docker exec {self.name} sh -c "{command_}"')
         if update_running:
-            self.running = run_on_node(self.ip, f'docker exec {self.name} sh -c "{command_}"')
+            self.running = running
 
     def assign_cpu_cores(self, cores):
-        core_list = ",".join(map(str, cores))
-        run_on_node(self.ip, f"echo {core_list} | sudo tee /sys/fs/cgroup/cpuset/{self.cos}/cpuset.cpus").wait()
-        print(f"[{self.name}@{self.ip}] COS {self.cos} CPU allocation: {core_list}")
+        self.core_list = ",".join(map(str, cores))
+        run_on_node(self.ip, f"echo {self.core_list} | sudo tee /sys/fs/cgroup/cpuset/{self.cos}/cpuset.cpus").wait()
+        # print(f"[{self.name}@{self.ip}] COS {self.cos} CPU allocation: {self.core_list}")
 
     def assign_llc_mbw(self, llc_mask, mbw_percent):
-        schemata_line = f"L3:{llc_mask} MB:{mbw_percent}"
-        run_on_node(self.ip, f"echo {schemata_line} | sudo tee /sys/fs/resctrl/{self.cos}/schemata").wait()
-        print(f"[{self.name}@{self.ip}] COS {self.cos} LLC and MBW allocation: LLC={llc_mask}, MBW={mbw_percent}%")
+        self.schemata_line = f"L3:{llc_mask} MB:{mbw_percent}"
+        run_on_node(self.ip, f"echo {self.schemata_line} | sudo tee /sys/fs/resctrl/{self.cos}/schemata").wait()
+        # print(f"[{self.name}@{self.ip}] COS {self.cos} LLC and MBW allocation: LLC={llc_mask}, MBW={mbw_percent}%")
 
 
