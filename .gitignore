@@ -1,2 +1,5 @@
 benchmarks/Tailbench
 *.pyc
+results/*
+results_docker/*
+
