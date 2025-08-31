@@ -32,14 +32,14 @@ rm -rf /home/wjy/SComet/benchmarks/masstree/QoS/lc_latency_realtime.log
 # 实时解析 lats.bin，每隔1ms追加一行到 lc_latency_realtime.log
 phase=0
 while kill -0 $MASSTREE_PID 2>/dev/null; do
-    if [ -f lats.bin ]; then
+    if [ -s lats.bin ]; then   # -s 表示文件存在且大小大于0
         phase=$((phase + 1))
         timestamp=$(date +%s.%N)   # 当前时间（秒.纳秒）
         echo "phase: $phase (t=$timestamp)" >> /home/wjy/SComet/benchmarks/masstree/QoS/lc_latency_realtime.log
         python3 ../utilities/parselats.py lats.bin >> /home/wjy/SComet/benchmarks/masstree/QoS/lc_latency_realtime.log
-        echo "" >> /home/wjy/SComet/benchmarks/masstree/QoS/lc_latency_realtime.log   # 可选：分隔空行
+        echo "" >> /home/wjy/SComet/benchmarks/masstree/QoS/lc_latency_realtime.log
     fi
-    sleep 0.001
+    sleep 0.1
 done
 
 wait $MASSTREE_PID

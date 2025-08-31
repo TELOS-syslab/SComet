@@ -16,27 +16,30 @@ CPU_cores = {
 nodes = {
     '172.17.1.73': {'user': 'wjy', 'passwd': 'gis.xen'}, # mars
     '172.17.1.74': {'user': 'wjy', 'passwd': 'gis.xen'}, # mercury
-    '172.17.1.75': {'user': 'wjy', 'passwd': 'gis.xen'}, # jupiter
+    '172.17.1.75': {'user': 'lmj', 'passwd': 'lmj123'}, # jupiter
     '172.17.1.78': {'user': 'wjy', 'passwd': 'gis.xen'}, # neptune
 }
 
 def run_on_node(ip, instr):
-    command = (
-        f"sshpass -p {shlex.quote(nodes[ip]['passwd'])} "
-        f"ssh -o StrictHostKeyChecking=no {shlex.quote(nodes[ip]['user'])}@{ip} "
-        f"{instr}"
-    )
-    # print(command)
-    return subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, preexec_fn=os.setsid)
-
+    command = [
+        "sshpass", "-p", nodes[ip]['passwd'],
+        "ssh", "-o", "StrictHostKeyChecking=no",
+        f"{nodes[ip]['user']}@{ip}",
+        instr
+    ]
+    # print(" ".join(command))
+    return subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, preexec_fn=os.setsid)
 
 def copy_from_node(ip, src, dest):
     remote_src = f"{nodes[ip]['user']}@{ip}:{src}"
-    command = (
-        f"sshpass -p {shlex.quote(nodes[ip]['passwd'])} "
-        f"scp -o StrictHostKeyChecking=no {remote_src} {shlex.quote(dest)}"
-    )
-    return subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, preexec_fn=os.setsid)
+    command = [
+        "sshpass", "-p", nodes[ip]['passwd'],
+        "scp", "-o", "StrictHostKeyChecking=no",
+        remote_src,
+        dest
+    ]
+    # print(" ".join(command))
+    return subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, preexec_fn=os.setsid)
 
 LC_instr = {
     "memcached": [f"bash {ROOT}/benchmarks/memcached/script/server.sh",

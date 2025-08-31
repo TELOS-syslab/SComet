@@ -35,7 +35,7 @@ class Allocator:
     def get_lc_latency(self, container_instance):
         benchmark = container_instance.task
         base_benchmark = container_instance.task.split('-')[0]
-        print(f'get latency {benchmark}')
+        # print(f'get latency {benchmark}')
         if benchmark not in self.lc_tasks:
             print(f"Unavailable benchmark {benchmark}")
             print("lc_task:")
@@ -51,9 +51,9 @@ class Allocator:
             print(f"Benchmark {self.benchmark_set}-{benchmark} not supported")
             return None, None
         if curr_ip != container_instance.ip:
-            print('start sending latency result')
+            # print('start sending latency result')
             copy_from_node(container_instance.ip, log_path, log_path)
-            print('finish sending latency result')
+            # print('finish sending latency result')
 
         qos_threshold = self.lc_tasks[benchmark]["QoS"]
         if not os.path.exists(log_path):
@@ -99,15 +99,14 @@ class Allocator:
             self.latency_result[benchmark].append(phase_output)
             self.violate_result[benchmark].append(phase_violate)
 
-        print("latency:")
-        print(self.latency_result[benchmark][-10:])
-        print("violate:")
-        print(self.latency_result[benchmark][-10:])
+        # print("latency (ms):", self.latency_result[benchmark][-10:])
+        # print("violate:", self.violate_result[benchmark][-10:])
 
         return
 
     def get_QoS_status(self):
         slack_dict = {}
+        print(f"QoS of {self.ip}")
         for index in self.lc_containers:
             container_instance = self.lc_containers[index]
             self.get_lc_latency(container_instance)
@@ -121,11 +120,14 @@ class Allocator:
             curr_latency = latencies[-1]
             prev_latency = latencies[-2] if len(latencies) > 1 else latencies[-1]
 
-            print(f'benchmark {benchmark} latency: {curr_latency}')
-            print(f'benchmark {benchmark} prev latency: {prev_latency}')
+            print(f'benchmark {benchmark} latency(ms): {curr_latency}')
+            print(f'benchmark {benchmark} prev latency(ms): {prev_latency}')
             slack = (self.lc_tasks[benchmark]["QoS"] - curr_latency) / self.lc_tasks[benchmark]["QoS"]
             prev_slack = (self.lc_tasks[benchmark]["QoS"] - prev_latency) / self.lc_tasks[benchmark]["QoS"]
+            print(f'benchmark {benchmark} slack: {slack}')
+            print(f'benchmark {benchmark} prev slack: {prev_slack}')
             slack_dict[index] = {'slack': slack, 'prev_slack': prev_slack}
+        print()
 
         # sort with current slack
         slack_sorted_list = sorted(slack_dict.items(), key=lambda x: x[1]['slack'])
@@ -233,7 +235,7 @@ class Allocator:
             'MBW'] < 10:
             print(f"No enough resource for task {task}:")
             print(self.available_resources)
-            return
+            return None
 
         index = self.unused_index()
         if index is None:
@@ -328,6 +330,7 @@ class Allocator:
     def release_container_resource(self, index):
         success = False
         for n in range(3):
+            self.push_wheel()
             if self.resource_wheel[0] == "CPU":
                 if len(self.resource_allocation[index]['CPU']) > 1:
                     self.available_resources['CPU'].append(self.resource_allocation[index]['CPU'].pop(0))
@@ -348,7 +351,6 @@ class Allocator:
                     self.available_resources['MBW'] += 10
                     success = True
                     break
-            self.push_wheel()
         if success:
             self.assign_all()
             return True
@@ -357,6 +359,7 @@ class Allocator:
     def add_container_resource(self, index):
         success = False
         for n in range(3):
+            self.push_wheel()
             if self.resource_wheel[0] == "CPU":
                 if len(self.available_resources['CPU']) > 1:
                     self.resource_allocation[index]['CPU'].append(self.available_resources['CPU'].pop(0))
@@ -376,7 +379,6 @@ class Allocator:
                     self.resource_allocation[index]['MBW'] += 10
                     success = True
                     break
-            self.push_wheel()
         if success:
             self.assign_all()
             return True

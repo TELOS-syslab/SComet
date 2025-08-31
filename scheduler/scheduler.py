@@ -45,6 +45,7 @@ class Scheduler:
         for ip in ip_list_:
             print(f"Generating Allocator for {ip}")
             self.node_dict[ip] = Allocator(self.benchmark_set, lc_tasks_, be_tasks_, ip)
+            run_on_node(ip, f'rm -rf /home/wjy/SComet/benchmarks/{benchmark_set_}/QoS/*')
 
     def lc_algorithm(self):
         max_slack = 0
@@ -97,23 +98,31 @@ class Scheduler:
             self.reallocate()
 
             for ip in self.node_dict:
-                print(f"lc on {ip}: ", self.node_dict[ip].lc_containers)
-                print(f"be on {ip}: ", self.node_dict[ip].be_containers)
+                print(f'IP: {ip} status')
+                for container in self.node_dict[ip].lc_containers.values():
+                    print(container)
+                for container in self.node_dict[ip].be_containers.values():
+                    print(container)
+            print()
 
             while self.lc_tasks:
                 lc, lc_ip = self.lc_algorithm()
                 if not lc:
                     continue
-                self.node_dict[lc_ip].run_lc_task(lc, self.lc_tasks[lc]["commands"])
-                self.lc_tasks.pop(lc)
+                print(f"Try to run {lc}")
+                if self.node_dict[lc_ip].run_lc_task(lc, self.lc_tasks[lc]["commands"]):
+                    self.lc_tasks.pop(lc)
                 time.sleep(5)
+                print()
 
             be, be_ip = self.be_algorithm()
             if be:
-                self.node_dict[be_ip].run_be_task(be, self.be_tasks[be]["commands"])
-                self.be_tasks.pop(be)
-                print('be task remain %d :' % len(self.be_tasks), self.be_tasks)
+                print(f"Try to run {be}")
+                if self.node_dict[be_ip].run_be_task(be, self.be_tasks[be]["commands"]):
+                    self.be_tasks.pop(be)
+                print('be task remain %d :' % len(self.be_tasks), self.be_tasks.keys())
                 time.sleep(5)
+                print()
 
             if not self.be_tasks:
                 finished = True
