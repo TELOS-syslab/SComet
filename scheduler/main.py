@@ -43,20 +43,19 @@ else:
     print('Microbench name needed')
     exit(0)
 
-'''benchmark_list = []
-lc_tasks = []
-be_tasks = []
+benchmark_list = []
+be_tasks = {}
 for root, dirs, files in os.walk(f'/home/wjy/SComet/{benchmark_set}/script'):
     for file in files:
         if file.split('.')[-1] == 'sh':
             benchmark_name = '.'.join(file.split('.')[0:-1])
             benchmark_list.append(benchmark_name)
-            for LC in LC_TASKS:
-                if LC in benchmark_name:
-                    lc_tasks.append(benchmark_name)
-                    break
-            if benchmark_name not in LC_TASKS:
-                be_tasks.append(benchmark_name)'''
+            if any(l in benchmark_name for l in LC_TASKS):
+                continue
+            be_tasks[benchmark_name] = {
+                "threads": 1,
+                "commands": [f'/home/wjy/SComet/benchmarks/{benchmark_set}/script/files 1'],
+            }
 
 ip_list = ['172.17.1.73', '172.17.1.74']
 
