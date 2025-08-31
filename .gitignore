@@ -3,3 +3,4 @@ benchmarks/Tailbench
 results/*
 results_docker/*
 *.log
+*result.txt
