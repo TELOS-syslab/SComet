@@ -104,9 +104,10 @@ class Allocator:
 
         return
 
-    def get_QoS_status(self):
+    def get_QoS_status(self, print_result=False):
         slack_dict = {}
-        print(f"QoS of {self.ip}")
+        if print_result:
+            print(f"QoS of {self.ip}")
         for index in self.lc_containers:
             container_instance = self.lc_containers[index]
             self.get_lc_latency(container_instance)
@@ -119,15 +120,16 @@ class Allocator:
                 continue
             curr_latency = latencies[-1]
             prev_latency = latencies[-2] if len(latencies) > 1 else latencies[-1]
-
-            print(f'benchmark {benchmark} latency(ms): {curr_latency}')
-            print(f'benchmark {benchmark} prev latency(ms): {prev_latency}')
             slack = (self.lc_tasks[benchmark]["QoS"] - curr_latency) / self.lc_tasks[benchmark]["QoS"]
             prev_slack = (self.lc_tasks[benchmark]["QoS"] - prev_latency) / self.lc_tasks[benchmark]["QoS"]
-            print(f'benchmark {benchmark} slack: {slack}')
-            print(f'benchmark {benchmark} prev slack: {prev_slack}')
+
+            if print_result:
+                print(f'benchmark {benchmark} latency(ms): {curr_latency}')
+                print(f'benchmark {benchmark} prev latency(ms): {prev_latency}')
+                print(f'benchmark {benchmark} slack: {slack}')
+                print(f'benchmark {benchmark} prev slack: {prev_slack}')
+
             slack_dict[index] = {'slack': slack, 'prev_slack': prev_slack}
-        print()
 
         # sort with current slack
         slack_sorted_list = sorted(slack_dict.items(), key=lambda x: x[1]['slack'])
@@ -158,7 +160,10 @@ class Allocator:
 
         for index, container in self.lc_containers.items():
             if (container.running and container.running.poll() is not None) or container.task == "killed":
-                print(f'lc task {container.get_running_task()} finished')
+                if container.task == "killed":
+                    print(f'lc task {container.get_running_task()} killed')
+                else:
+                    print(f'lc task {container.get_running_task()} finished')
                 finished_lc.append(container.get_running_task())
                 if index in self.resource_allocation:
                     alloc = self.resource_allocation.pop(index)
@@ -172,7 +177,10 @@ class Allocator:
 
         for index, container in self.be_containers.items():
             if (container.running and container.running.poll() is not None) or container.task == "killed":
-                print(f'be task {container.get_running_task()} finished')
+                if container.task == "killed":
+                    print(f'be task {container.get_running_task()} killed')
+                else:
+                    print(f'be task {container.get_running_task()} finished')
                 finished_be.append(container.get_running_task())
                 if index in self.resource_allocation:
                     alloc = self.resource_allocation.pop(index)
@@ -398,5 +406,7 @@ class Allocator:
     def remove_newest_be_task(self):
         if not self.be_containers:
             return None
-        return self.kill_task(list(self.be_containers)[-1])
+        newest_be_task = self.be_containers[list(self.be_containers)[-1]].task
+        self.kill_task(list(self.be_containers)[-1])
+        return newest_be_task
 

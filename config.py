@@ -14,6 +14,7 @@ CPU_cores = {
 }
 
 nodes = {
+    '172.17.1.72': {'user': 'wjy', 'passwd': 'gis.xen'}, # venus
     '172.17.1.73': {'user': 'wjy', 'passwd': 'gis.xen'}, # mars
     '172.17.1.74': {'user': 'wjy', 'passwd': 'gis.xen'}, # mercury
     '172.17.1.75': {'user': 'lmj', 'passwd': 'lmj123'}, # jupiter
