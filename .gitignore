@@ -1,6 +1,7 @@
 benchmarks/Tailbench
-*.pyc
+**/*.pyc
 results/*
 results_docker/*
-*.log
-*result.txt
+**/*.log
+**/*.out
+**/*result.txt
