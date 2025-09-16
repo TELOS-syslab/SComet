@@ -24,8 +24,8 @@ class Allocator:
         self.max_container = 8
 
         self.available_resources = {
-            'CPU': list(range(56)),
-            'LLC': 0x7fff,
+            'CPU': hardware_resources[self.ip]['CPU'],
+            'LLC': hardware_resources[self.ip]['LLC'],
             'MBW': 100
         }
 
@@ -294,7 +294,8 @@ class Allocator:
         if QoS_status == 0:
             return 0
         if QoS_status == 1:
-            if self.release_lc_resource(slack_list):
+            self.release_lc_resource(slack_list)
+            if self.available_resources['CPU'] or self.available_resources['LLC'] or self.available_resources['MBW']:
                 if self.be_containers:
                     be_index = list(self.be_containers)[0]
                     if be_index not in self.resource_allocation:

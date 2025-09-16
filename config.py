@@ -8,17 +8,27 @@ import shlex
 ROOT = "/home/wjy/SComet"
 curr_ip = "162.105.86.11"
 
-CPU_cores = {
-    'NUMA0': [str(i) for i in range(0, 56)],
-    # 'NUMA1': [str(i) for i in range(56, 112)],
-}
+# CPU_cores = {
+#     'NUMA0': [str(i) for i in range(0, 56)],
+#     # 'NUMA1': [str(i) for i in range(56, 112)],
+# }
 
 nodes = {
     '172.17.1.72': {'user': 'wjy', 'passwd': 'gis.xen'}, # venus
     '172.17.1.73': {'user': 'wjy', 'passwd': 'gis.xen'}, # mars
     '172.17.1.74': {'user': 'wjy', 'passwd': 'gis.xen'}, # mercury
     '172.17.1.75': {'user': 'lmj', 'passwd': 'lmj123'}, # jupiter
+    '172.17.1.77': {'user': 'wjy', 'passwd': 'gis.xen'}, # uranus
     '172.17.1.78': {'user': 'wjy', 'passwd': 'gis.xen'}, # neptune
+}
+
+hardware_resources = {
+    '172.17.1.72': {'CPU': list(range(32)), 'LLC': 0x7fff}, # venus
+    '172.17.1.73': {'CPU': list(range(32)), 'LLC': 0x7fff}, # mars
+    '172.17.1.74': {'CPU': list(range(32)), 'LLC': 0x7fff}, # mercury
+    '172.17.1.75': {'CPU': list(range(32)), 'LLC': 0x7fff}, # jupiter
+    '172.17.1.77': {'CPU': list(range(32)), 'LLC': 0x7fff}, # uranus
+    '172.17.1.78': {'CPU': list(range(32)), 'LLC': 0x7fff}, # neptune
 }
 
 def run_on_node(ip, instr):

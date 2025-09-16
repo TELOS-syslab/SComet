@@ -5,6 +5,7 @@ import math
 import sys
 import json
 import copy
+import random
 from datetime import datetime
 
 sys.path.append('/home/wjy/SComet')
@@ -53,7 +54,7 @@ class Scheduler:
                     max_slack = slack_list[0][1]["slack"]
                     max_ip = ip
         if max_ip and self.be_tasks:
-            return list(self.be_tasks)[0], max_ip
+            return random.choice(list(self.be_tasks)), max_ip
         return None, None
 
     def prune(self):
