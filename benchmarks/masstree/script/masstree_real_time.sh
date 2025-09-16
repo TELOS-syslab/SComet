@@ -39,7 +39,7 @@ while kill -0 $MASSTREE_PID 2>/dev/null; do
         python3 ../utilities/parselats.py lats.bin >> /home/wjy/SComet/benchmarks/masstree/QoS/lc_latency_realtime.log
         echo "" >> /home/wjy/SComet/benchmarks/masstree/QoS/lc_latency_realtime.log   # 可选：分隔空行
     fi
-    sleep 0.1
+    sleep 1	
 done
 
 wait $MASSTREE_PID
