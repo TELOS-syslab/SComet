@@ -8,6 +8,7 @@ IFS=',' read -ra core_ids <<< "$core_ids_string"
 MAXREQS=$((QPS * duration))
 WARMUPREQS=$((QPS * 7))
 
+mkdir -p /home/wjy/SComet/benchmarks/masstree/QoS
 cd /home/wjy/SComet/benchmarks/Tailbench/tailbench/masstree
 rm -rf lats.bin
 rm -rf lats.txt
