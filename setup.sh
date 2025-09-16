@@ -34,7 +34,7 @@ else
     echo "lc_container:v1 already exists, skipping build."
 fi
 
-
+echo "installing pqos..."
 cd /home/wjy
 if [ ! -d intel-cmt-cat ]; then
     git clone https://github.com/intel/intel-cmt-cat.git
@@ -45,6 +45,7 @@ sudo cp ./pqos/pqos /usr/local/bin/
 echo "/home/wjy/intel-cmt-cat/lib" | sudo tee /etc/ld.so.conf.d/pqos.conf
 sudo ldconfig
 
+echo "installing tailbench..."
 cd /home/wjy/SComet/benchmarks
 if [ ! -d Tailbench ]; then
     git clone git@github.com:TELOS-syslab/SComet-realmachine-tailbench.git
@@ -56,4 +57,4 @@ else
 fi
 cd /home/wjy/SComet/benchmarks/Tailbench/tailbench
 bash build.sh harness masstree
-chmod -R +x /home/wjy/SComet/benchmarks/
+sudo chmod -R +x /home/wjy/SComet/benchmarks/
