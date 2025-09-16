@@ -68,7 +68,7 @@ for root, dirs, files in os.walk(f'/home/wjy/SComet/benchmarks/{benchmark_set}/s
             }
 print(be_tasks.keys())
 
-ip_list = ['172.17.1.73', '172.17.1.78', '172.17.1.75', '172.17.1.72']
+ip_list = ['172.17.1.73', '172.17.1.78', '172.17.1.75', '172.17.1.74']
 
 for ip in ip_list:
     run_on_node(ip, f"mkdir -p /home/wjy/SComet/benchmarks/{benchmark_set}/QoS").wait()

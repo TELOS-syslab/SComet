@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for i in {1..10}; do
+for i in {1..5}; do
     echo "===== 第 $i 次运行 ====="
 
     python3 -u main.py test SComet > SComet_test.log 2>&1
