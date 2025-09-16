@@ -37,7 +37,7 @@ fi
 
 cd /home/wjy
 if [ ! -d intel-cmt-cat ]; then
-    git clone git@github.com:intel/intel-cmt-cat.git
+    git clone https://github.com/intel/intel-cmt-cat.git
 fi
 cd intel-cmt-cat
 make
