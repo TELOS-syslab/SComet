@@ -30,17 +30,19 @@ if len(sys.argv) > 2:
     algorithm = sys.argv[2]
     print(f"Algorithm: {algorithm}")
 
+constant = True
+
 lc_tasks = {}
 phase = 0
 for i, max_load in enumerate(MAX_LOAD):
     phase += 0.3
-    if False:
+    if i % 2 == 1 or constant:
         lc_tasks[f"{LC_TASKS}-{max_load}"] = {
             "threads": THREADS,
             "max_load": max_load,
             "QoS": QOS,
             "commands": [f'bash /home/wjy/SComet/benchmarks/{benchmark_set}/script/{LC_TASKS}_real_time.sh'],
-            "phase": phase
+            "phase": -1
         }
     else:
         lc_tasks[f"{LC_TASKS}-{max_load}"] = {
@@ -48,7 +50,7 @@ for i, max_load in enumerate(MAX_LOAD):
             "max_load": max_load,
             "QoS": QOS,
             "commands": [f'bash /home/wjy/SComet/benchmarks/{benchmark_set}/script/{LC_TASKS}_real_time.sh'],
-            "phase": -1
+            "phase": phase
         }
 
 benchmark_list = []
@@ -66,9 +68,10 @@ for root, dirs, files in os.walk(f'/home/wjy/SComet/benchmarks/{benchmark_set}/s
             }
 print(be_tasks.keys())
 
-ip_list = ['172.17.1.73', '172.17.1.72', '172.17.1.74', '172.17.1.78']
+ip_list = ['172.17.1.73', '172.17.1.78', '172.17.1.75', '172.17.1.72']
 
 for ip in ip_list:
+    run_on_node(ip, f"mkdir -p /home/wjy/SComet/benchmarks/{benchmark_set}/QoS").wait()
     proc = run_on_node(ip, "docker ps -a --format '{{.ID}} {{.Names}}'")
     out, err = proc.communicate()
     containers = out.decode().strip().splitlines()
