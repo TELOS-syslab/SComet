@@ -10,3 +10,5 @@ results_docker/
 **/*.out
 **/*result.txt
 **/osml_benchmark_v1.0.tar.gz
+scheduler/OSML/logs/
+scheduler/OSML/tmp/
