@@ -6,4 +6,4 @@ results_docker/*
 **/*.log
 **/*.out
 **/*result.txt
-/home/wjy/SComet/scheduler/OSML/osml_benchmark_v1.0.tar.gz
+**/osml_benchmark_v1.0.tar.gz
