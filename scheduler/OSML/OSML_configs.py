@@ -264,14 +264,16 @@ def init_docker(ip):
             logger.info((load_out.decode(), load_err.decode()))
         else:
             logger.warning(f"Docker image {DOCKER_IMAGE} not found and tar {TAR_PATH} does not exist on {ip}")
+            outs, errs = shell_output("docker pull {}".format(DOCKER_IMAGE), wait=True, output=False, ip=ip)
+            logger.info((outs, errs))
     else:
         logger.info(f"Docker image {DOCKER_IMAGE} already exists on {ip}")
     # PARSEC_IMAGE = "spirals/parsec-3.0:latest"
     BIND_PATH = None
     VOLUME_PATH = None
     # Start bechmark_container and get the volume path
-    outs, errs = shell_output("docker pull {}".format(DOCKER_IMAGE), wait=True, output=False, ip=ip)
-    logger.info((outs, errs))
+    # outs, errs = shell_output("docker pull {}".format(DOCKER_IMAGE), wait=True, output=False, ip=ip)
+    # logger.info((outs, errs))
     # outs, errs = shell_output("docker pull {}".format(PARSEC_IMAGE), wait=True, output=False, ip=ip)
     # logger.info((outs, errs))
     # os.system("mkdir -p {}/volume".format(ROOT))
@@ -358,7 +360,7 @@ def init_platform_conf(ip):
     proc = run_on_node(ip, "cat /sys/devices/system/cpu/cpu0/cache/index3/size")
     outs, errs = proc.communicate()
     MB_PER_WAY = int(outs.decode().strip().rstrip("K")) / 1024 / N_WAYS
-    proc = run_on_node(ip, "pqos -I -d | grep COS | awk {'print $3'}")
+    proc = run_on_node(ip, f"echo {nodes[ip]['passwd']} | sudo -S pqos -I -d | grep COS | awk {{'print $3'}}")
     outs, errs = proc.communicate()
     lines = [int(x) for x in outs.decode().splitlines() if x.strip()]
     N_COS = min(lines)
@@ -368,5 +370,5 @@ def init_platform_conf(ip):
     WAY_INDEX = list(range(N_WAYS))
 
 for ip in nodes:
-    run_on_node(ip, "rm -rf /var/lock/libpqos")
+    run_on_node(ip, f"echo {nodes[ip]['passwd']} | sudo -S rm -rf /var/lock/libpqos")
     init(ip)

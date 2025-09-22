@@ -339,6 +339,8 @@ class program_mgr:
             return False
 
     def all_done(self):
+        if not all([b == "dead" for b in self.BEs.status.values()]):
+            return False
         return (len(self.pending_queue) == 0 and len(self.programs) == 0) or (len(self.programs) > 0 and all([self.programs[name].mode == MODE.Dead for name in self.programs]))
 
     def RPS_can_be_changed(self, name):
@@ -1351,7 +1353,7 @@ class program:
 
     def get_pid(self):
         # if self.name in ["nginx"]:
-        if False
+        if False:
             self.pid = [int(item) for item in check_output(
                 ["pgrep", "-f", NAME_2_PNAME[self.name]]).split()]
             self.pid_str = ",".join([str(pid) for pid in self.pid])

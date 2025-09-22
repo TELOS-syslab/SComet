@@ -1,5 +1,6 @@
 import time
 import numpy as np
+import math
 from copy import deepcopy
 
 from utils import *
@@ -30,18 +31,21 @@ for root, dirs, files in os.walk(f'/home/wjy/SComet/benchmarks/test/script'):
 print(be_tasks.keys())
 
 def OSML(mgrs, lc_tasks_, be_tasks_, terminate_when_QoS_is_met=False, terminate_when_timeout=True, timeout=7200):
+    start_time = time.time()
     lc_tasks = lc_tasks_
     be_tasks = be_tasks_
     while True:
-        if all([mgr.all_done() for mgr in mgrs]):
-            break
+        if not be_tasks:
+            if all([mgr.all_done() for mgr in mgrs]):
+                break
+            
         for mgr in mgrs:
             if len(list(mgr.programs.keys())) == 0:
-                mgr.add_app(lc_tasks.pop(), "PCT", sin_value(1, 0.5, (time.time() - mgr.start_time) / 1800), 16, launch_time=0, end_time=600)
+                mgr.add_app(lc_tasks.pop(), "PCT", sin_value(1, 0.5, (time.time() - start_time) / 1800), 16, launch_time=0, end_time=600)
             for app in list(mgr.programs.keys()):
                 if mgr.can_be_ended(app):
                     mgr.end(app)
-                    mgr.add_app(app, "PCT", sin_value(1, 0.5, (time.time()-mgr.start_time) / 1800), 16, launch_time=0, end_time=600)
+                    mgr.add_app(app, "PCT", sin_value(1, 0.5, (time.time() - start_time) / 1800), 16, launch_time=0, end_time=600)
                 if mgr.RPS_can_be_changed(app):
                     mgr.change_RPS(app)
 
@@ -100,7 +104,7 @@ def OSML(mgrs, lc_tasks_, be_tasks_, terminate_when_QoS_is_met=False, terminate_
                 time.sleep(5)  # record latency
                 return
 
-            if terminate_when_timeout and time.time()-mgr.start_time > timeout:
+            if terminate_when_timeout and time.time() - start_time > timeout:
                 print_color("Terminate because the time is out.", "green")
                 logger.info("Terminate because the time is out.")
                 return
@@ -112,12 +116,12 @@ def OSML(mgrs, lc_tasks_, be_tasks_, terminate_when_QoS_is_met=False, terminate_
 
 def main():
     mgrs = []
-    for ip_ in node:
+    for ip_ in nodes:
         # mgrs.append(program_mgr(config_path=ROOT + "/workload.txt", regular_update=True, enable_models=True, training=True, ip))
         mgrs.append(
             program_mgr(None, regular_update=True, enable_models=True, training=True, ip=ip_))
     try:
-        OSML(mgrs, MY_LC_TASKS, be_tasks.keys())
+        OSML(mgrs, MY_LC_TASKS, list(be_tasks.keys()))
     except KeyboardInterrupt as e:
         raise e
     except Exception as e:

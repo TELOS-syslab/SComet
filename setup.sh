@@ -55,6 +55,12 @@ else
     git pull
     cd ..
 fi
+cd /home/wjy/SComet/benchmarks/Tailbench
+wget https://tailbench.csail.mit.edu/tailbench.inputs.tgz
+tar xvf tailbench.inputs.tgz
+mkdir -p /home/wjy/SComet/scheduler/OSML/volume
+cp -r tailbench.inputs /home/wjy/SComet/scheduler/OSML/volume
+
 cd /home/wjy/SComet/benchmarks/Tailbench/tailbench
 bash build.sh harness masstree
 sudo chmod -R +x /home/wjy/SComet/benchmarks/

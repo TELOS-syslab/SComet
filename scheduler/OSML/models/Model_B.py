@@ -8,7 +8,7 @@ import argparse
 from tqdm import tqdm
 
 sys.path.append("../")
-from configs import B_FEATURES, B_LABELS, ROOT, MAX_VAL, MIN_VAL
+from OSML_configs import B_FEATURES, B_LABELS, ROOT, MAX_VAL, MIN_VAL
 from utils import *
 
 tf.disable_eager_execution()

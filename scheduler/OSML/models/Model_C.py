@@ -13,7 +13,7 @@ from utils import *
 from tqdm import tqdm
 import logging
 import matplotlib.pyplot as plt
-from configs import ROOT, C_FEATURES, ACTION_SPACE
+from OSML_configs import ROOT, C_FEATURES, ACTION_SPACE
 
 logging.basicConfig(level = logging.INFO,format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 log=logging.getLogger(__name__)
