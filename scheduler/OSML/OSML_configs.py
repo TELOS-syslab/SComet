@@ -240,6 +240,27 @@ def init_docker(ip):
     global DOCKER_IMAGE, PARSEC_IMAGE, DOCKER_CONTAINER, BIND_PATH, VOLUME_PATH
     DOCKER_IMAGE = "sysinventor/osml_benchmark:v1.0"
     DOCKER_CONTAINER = "benchmark_container"
+    TAR_PATH = "/home/wjy/SComet/scheduler/OSML/osml_benchmark_v1.0.tar"
+    cmd_check = f"docker images -q {DOCKER_IMAGE}"
+    proc = run_on_node(ip, cmd_check)
+    outs, errs = proc.communicate()
+    outs = outs.decode().strip()
+    errs = errs.decode().strip()
+    if outs == "":
+        cmd_check_tar = f"test -f {TAR_PATH} && echo 'exists' || echo 'not_exists'"
+        proc_tar = run_on_node(ip, cmd_check_tar)
+        tar_out, _ = proc_tar.communicate()
+        tar_out = tar_out.decode().strip()
+        if tar_out == "exists":
+            logger.info(f"Docker image {DOCKER_IMAGE} not found on {ip}, loading from tar")
+            cmd_load = f"docker load -i {TAR_PATH}"
+            proc_load = run_on_node(ip, cmd_load)
+            load_out, load_err = proc_load.communicate()
+            logger.info((load_out.decode(), load_err.decode()))
+        else:
+            logger.warning(f"Docker image {DOCKER_IMAGE} not found and tar {TAR_PATH} does not exist on {ip}")
+    else:
+        logger.info(f"Docker image {DOCKER_IMAGE} already exists on {ip}")
     # PARSEC_IMAGE = "spirals/parsec-3.0:latest"
     BIND_PATH = None
     VOLUME_PATH = None
