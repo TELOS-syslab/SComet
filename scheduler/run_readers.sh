@@ -15,8 +15,8 @@ for dir in */; do
         echo "Processing $dir ..."
         (
             cd "$dir" || exit
-            python3 ../read_latency.py ./
-            python3 ../read_JCT.py ./
+            python3 /home/wjy/SComet/scheduler/read_latency.py ./
+            python3 /home/wjy/SComet/scheduler/read_JCT.py ./
         )
     fi
 done

@@ -103,7 +103,7 @@ class Scheduler:
                 command = f'{self.lc_tasks[lc]["commands"][0]} {threads} {rps} {run_time}'
                 if self.node_dict[lc_ip].run_lc_task(lc, command):
                     self.lc_tasks.pop(lc)
-                time.sleep(1)
+                    time.sleep(1)
 
             print()
             be, be_ip = self.be_algorithm()
@@ -113,8 +113,8 @@ class Scheduler:
                 command = f'{self.be_tasks[be]["commands"][0]} {threads}'
                 if self.node_dict[be_ip].run_be_task(be, command):
                     self.be_tasks.pop(be)
+                    time.sleep(1)
                 print('be task remain %d :' % len(self.be_tasks), self.be_tasks.keys())
-                time.sleep(1)
 
             if not self.be_tasks:
                 finished = True

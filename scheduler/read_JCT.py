@@ -3,41 +3,50 @@ import sys
 import glob
 import os
 
-# 给定的目录
 log_dir = sys.argv[1]
 
-time_pattern = re.compile(r"time ([0-9.]+):")
+time_pattern = re.compile(r"time\s+([0-9.]+):")
 be_pattern = re.compile(r"\[be_container\d+@([\d.]+)\]")
+ip_pattern = re.compile(r"Generating Allocator for\s+([\d.]+)")
 
-# 搜索目录下所有 .log 文件
 log_files = glob.glob(os.path.join(log_dir, "*.log"))
 
 for logfile in log_files:
     print(f"Processing {logfile}...")
 
     current_time = None
-    last_seen = {}   # ip -> last time we saw BE
-    total_time = {}  # ip -> total BE running time
+    last_seen = {}    # ip -> last time
+    total_time = {}   # ip -> accumulated runtime
+    all_ips = set()   # 从开头读取的所有 ip
+    final_time = 0.0
 
     with open(logfile, "r") as f:
         for line in f:
-            # 更新当前时间
-            m = time_pattern.match(line.strip())
+            # 收集所有 Allocator 的 IP
+            m = ip_pattern.search(line)
+            if m:
+                all_ips.add(m.group(1))
+
+            # 解析时间
+            m = time_pattern.search(line)
             if m:
                 current_time = float(m.group(1))
+                final_time = current_time
                 continue
 
-            # 发现 BE 容器
+            # 解析 BE 容器
             m = be_pattern.search(line)
             if m and current_time is not None:
                 ip = m.group(1)
                 if ip in last_seen:
-                    # 累加时间差
                     total_time[ip] = total_time.get(ip, 0.0) + (current_time - last_seen[ip])
-                # 更新最近一次看到的时间
                 last_seen[ip] = current_time
 
-    # 输出结果
-    for ip, t in total_time.items():
-        print(f"{ip} runtime {t:.3f} seconds")
+    # 如果需要，把最后一次看到的持续到文件末尾也算进去
+    for ip, last_t in last_seen.items():
+        total_time[ip] = total_time.get(ip, 0.0) + (final_time - last_t)
+
+    # 确保所有 ip 都有输出（没有运行过的就是 0）
+    for ip in sorted(all_ips):
+        print(f"{ip} runtime {total_time.get(ip, 0.0):.3f} seconds")
     print()
