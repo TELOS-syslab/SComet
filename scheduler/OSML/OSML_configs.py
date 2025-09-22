@@ -240,7 +240,8 @@ def init_docker(ip):
     global DOCKER_IMAGE, PARSEC_IMAGE, DOCKER_CONTAINER, BIND_PATH, VOLUME_PATH
     DOCKER_IMAGE = "sysinventor/osml_benchmark:v1.0"
     DOCKER_CONTAINER = "benchmark_container"
-    TAR_PATH = "/home/wjy/SComet/scheduler/OSML/osml_benchmark_v1.0.tar"
+    TAR_PATH = "/home/wjy/SComet/scheduler/OSML/osml_benchmark_v1.0.tar.gz"
+    UNTAR_PATH = "/home/wjy/SComet/scheduler/OSML/osml_benchmark_v1.0.tar"
     cmd_check = f"docker images -q {DOCKER_IMAGE}"
     proc = run_on_node(ip, cmd_check)
     outs, errs = proc.communicate()
@@ -253,6 +254,10 @@ def init_docker(ip):
         tar_out = tar_out.decode().strip()
         if tar_out == "exists":
             logger.info(f"Docker image {DOCKER_IMAGE} not found on {ip}, loading from tar")
+            cmd_unzip = f"gunzip -c {TAR_PATH} > {UNTAR_PATH}"
+            proc_unzip = run_on_node(ip, cmd_unzip)
+            unzip_out, unzip_err = proc_unzip.communicate()
+            logger.info((unzip_out.decode(), unzip_err.decode()))
             cmd_load = f"docker load -i {TAR_PATH}"
             proc_load = run_on_node(ip, cmd_load)
             load_out, load_err = proc_load.communicate()
