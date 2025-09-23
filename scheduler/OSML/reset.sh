@@ -19,6 +19,7 @@ ps -ef |grep top |awk '{print $2}'|xargs kill -9
 ps -ef |grep pqos |awk '{print $2}'|xargs kill -9
 ps -ef |grep perf |awk '{print $2}'|xargs kill -9
 ps -ef |grep mysql |awk '{print $2}'|xargs kill -9
+pkill -f base.mytest
 docker exec -itd benchmark_container killall node
 docker exec -itd benchmark_container killall redis-server
 docker ps -a | grep spirals/parsec-3.0 | awk '{print $1}' |xargs docker rm

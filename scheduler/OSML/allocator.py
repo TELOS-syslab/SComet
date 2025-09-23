@@ -416,6 +416,7 @@ class program_mgr:
         if not self.manage:
             self.programs[name].launch()
         else:
+            # print("resource:", N_CORES, self.resource_used["cores"], N_WAYS, self.resource_used["ways"])
             if core_len is None:
                 core_len = N_CORES - self.resource_used["cores"]
                 if not self.BEs.empty():
@@ -428,6 +429,7 @@ class program_mgr:
             cores_required = 0 if core_len > 0 else 1
             ways_required = 0 if way_len > 0 else 1
 
+            # print("launch", name, cores_required, ways_required)
             if not (cores_required == 0 and ways_required == 0):
                 victim = self.select_victim(cores_required, ways_required)
                 self.allocate_diff(
@@ -558,6 +560,13 @@ class program_mgr:
         neighbor_features = self.get_neighbor_features(name)
         features = np.concatenate((A_features[:-3], neighbor_features), axis=0)
         output = model_a.use_model(features)
+        for i, result in enumerate(output):
+            if output[i] != output[i] and i in [0, 2]:
+                output[i] = MB_PER_WAY
+            if output[i] != output[i] and i in [1, 3]:
+                output[i] = 1
+            if output[i] != output[i] and i in [4]:
+                output[i] = 10
         if MBA_SUPPORT:
             result = {"RCliff": {"ways": cache_2_way(output[0], MB_PER_WAY), "cores": int(round(output[1]))},
                       "OAA": {"ways": cache_2_way(output[2], MB_PER_WAY), "cores": int(round(output[3]))},
@@ -600,6 +609,7 @@ class program_mgr:
         for name in sorted_programs:
             if name in exclude:
                 continue
+            # print("select victim", name, self.programs[name].core_len, self.programs[name].way_len)
             if self.programs[name].core_len-cores_required > 0 and self.programs[name].way_len-ways_required > 0:
                 return name
         return None
@@ -1154,8 +1164,8 @@ class program_mgr:
                 core_used_str = self.get_core_mask(core_used)
                 # subprocess.call("pqos -I -a llc:{}={}".format(COS_id, core_used_str) + tail, shell=True)
                 # subprocess.call("pqos -I -e llc:{}=0x{}".format(COS_id, way_used_str) + tail, shell=True)
-                cmd1 = f"pqos -I -a llc:{COS_id}={core_used_str} {tail}"
-                cmd2 = f"pqos -I -e llc:{COS_id}=0x{way_used_str} {tail}"
+                cmd1 = f"echo {nodes[self.ip]['passwd']} | sudo -S pqos -I -a llc:{COS_id}={core_used_str} {tail}"
+                cmd2 = f"echo {nodes[self.ip]['passwd']} | sudo -S pqos -I -e llc:{COS_id}=0x{way_used_str} {tail}"
                 run_on_node(self.ip, cmd1)
                 run_on_node(self.ip, cmd2)
             except Exception as e:
@@ -1454,10 +1464,10 @@ class program:
         #                 self.pid_str) + tail, shell=True)
         # subprocess.call(
         #     "pqos -I -i 1 -p all:{} &".format(self.pid_str), shell=True, stdout=pqosout)
-        cmd_pqos_assoc = f"pqos -I -a pid:{self.COS_id}={self.pid_str} {'' if PQOS_OUTPUT_ENABLED else '1>/dev/null'}"
+        cmd_pqos_assoc = f"echo {nodes[self.ip]['passwd']} | sudo -S pqos -I -a pid:{self.COS_id}={self.pid_str} {'' if PQOS_OUTPUT_ENABLED else '1>/dev/null'}"
         run_on_node(self.ip, cmd_pqos_assoc)
 
-        cmd_pqos_monitor = f"nohup pqos -I -i 1 -p all:{self.pid_str} > {pqos_file} 2>&1 &"
+        cmd_pqos_monitor = f"echo {nodes[self.ip]['passwd']} | sudo -S nohup pqos -I -i 1 -p all:{self.pid_str} > {pqos_file} 2>&1 &"
         run_on_node(self.ip, cmd_pqos_monitor)
         time.sleep(1)
 
@@ -1468,13 +1478,32 @@ class program:
             if isinstance(self.pid, int):
                 # mem_res = check_output(
                 #     "tail -n 1 {}top.{}".format(self.tmp_dir, self.pid_str_md5), shell=True).decode()
-                mem_res = run_on_node(self.ip, f"tail -n 1 "
-                                               f"{self.tmp_dir}top.{self.pid_str_md5}").communicate()[0].decode()
-                mem_split = mem_res.split()
-                self.state["Virt_Memory"] = any_2_byte(mem_split[4])
-                self.state["Res_Memory"] = any_2_byte(mem_split[5])
-                self.state["CPU_Utilization"] = float(mem_split[8])
-                self.state["Memory_Footprint"] = float(mem_split[9])
+
+                # mem_res = run_on_node(self.ip, f"tail -n 1 "
+                #                                f"{self.tmp_dir}top.{self.pid_str_md5}").communicate()[0].decode()
+                # mem_split = mem_res.split()
+                # self.state["Virt_Memory"] = any_2_byte(mem_split[4])
+                # self.state["Res_Memory"] = any_2_byte(mem_split[5])
+                # self.state["CPU_Utilization"] = float(mem_split[8])
+                # self.state["Memory_Footprint"] = float(mem_split[9])
+                mem_res = run_on_node(
+                    self.ip,
+                    f"tail -n 10 {self.tmp_dir}top.{self.pid_str_md5}"
+                ).communicate()[0].decode().strip()
+                lines = mem_res.splitlines()
+                target_line = None
+                for line in reversed(lines):
+                    mem_split = line.split()
+                    if mem_split and mem_split[0].isdigit() and int(mem_split[0]) == self.pid:
+                        target_line = mem_split
+                        break
+                if target_line is None:
+                    return False
+                self.state["Virt_Memory"] = any_2_byte(target_line[4])  # VIRT
+                self.state["Res_Memory"] = any_2_byte(target_line[5])  # RES
+                self.state["CPU_Utilization"] = float(target_line[8])  # %CPU
+                self.state["Memory_Footprint"] = float(target_line[9])  # %MEM
+
             elif isinstance(self.pid, list):
                 # mem_res = check_output("tail -n {} {}top.{}".format(
                 #     (len(self.pid)+1)*2, self.tmp_dir, self.pid_str_md5), shell=True).decode()
@@ -1572,7 +1601,7 @@ class program:
             freq_sum = 0
             # freq_res = check_output(
             #     "cat /proc/cpuinfo| grep 'cpu MHz'", shell=True)
-            freq_res = run_on_node(self.ip, "cat /proc/cpuinfo | grep 'cpu MHz'").communicate()[0].decode().splitlines()
+            freq_res = run_on_node(self.ip, "cat /proc/cpuinfo | grep 'cpu MHz'").communicate()[0].decode()
             freq_line = freq_res.splitlines()
             for i in core_list:
                 # freq_temp = re.findall(r"\d+\.?\d*", freq_line[i].decode())
@@ -1589,10 +1618,20 @@ class program:
         if any([key in ["Latency", "QoS"] for key in keys]):
             if Latency_update:
                 try:
-                    cmd = LATENCY_STR[self.name]
+                    cmd = f"echo {nodes[self.ip]['passwd']} | sudo -S " + LATENCY_STR(self.name, self.ip)
                     # output = check_output(cmd, shell=True).decode()
                     output = run_on_node(self.ip, cmd).communicate()[0].decode()
-                    if self.name in ["img-dnn", "xapian", "moses", "sphinx", "specjbb", "masstree", "login", "silo", "ads"]:
+
+                    # 单独获取最后10行
+                    # cmd_last10 = f"echo {nodes[self.ip]['passwd']} | sudo -S tail -n 10 {VOLUME_PATH[self.ip]}/tailbench-v0.9/masstree/latency_of_last_second.txt"
+                    # output_last10 = run_on_node(self.ip, cmd_last10).communicate()[0].decode().strip()
+                    # print("Last 10 lines:\n")
+                    # lines = output_last10.splitlines()
+                    # for line in lines:
+                    #     print(line)
+
+                    
+                    if any([benchmark in self.name for benchmark in ["img-dnn", "xapian", "moses", "sphinx", "specjbb", "masstree", "login", "silo", "ads"]]):
                         latency = float(output) / 1000000
                     elif self.name in ["mongodb", "mysql", "redis"]:
                         if "[]" in output:
@@ -1606,6 +1645,7 @@ class program:
                         latency = float(output.split()[-1]) / 1000
                     else:
                         latency = None
+                    # print("latency: ", latency)
                 except Exception as e:
                     latency = None
                 if latency is not None:
@@ -1683,9 +1723,11 @@ class BEs:
 
 
     def get_pid(self,name):
+        short_name = name.split('.')[-1].split('_r')[0]
         try:
             # self.pid[name] = int(check_output(["pgrep", "-n", "-f",name]))
-            self.pid[name] = int(run_on_node(self.ip, f"pgrep -n -f {name}").communicate()[0].decode())
+            self.pid[name] = int(run_on_node(self.ip, f'pgrep -a -f {short_name} | grep -vE "sh|pgrep"').communicate()[0].split()[0].decode())
+            # print(self.pid[name])
             self.pid_str[name] = str(self.pid[name])
             self.pid_str_md5[name] = hashlib.md5(self.pid_str[name].encode()).hexdigest()
             return self.pid[name]
@@ -1704,7 +1746,7 @@ class BEs:
             if self.get_pid(name) is not None:
                 time.sleep(1)
                 continue
-
+            # print('BE', name, 'not running, status', self.status[name])
             if self.status[name] == "running":
                 self.status[name] = "dead"
                 break
@@ -1715,7 +1757,7 @@ class BEs:
                 else:
                     taskset_str = ""
 
-                cmd=LAUNCH_STR_BE.format(name)
+                cmd=f"echo {nodes[self.ip]['passwd']} | sudo -S " + LAUNCH_STR_BE.format(name)
                 run_on_node(self.ip, f"{taskset_str}{cmd}").wait()
                 # subprocess.call(taskset_str+cmd, shell=True)
                 self.status[name] = "running"
@@ -1732,8 +1774,8 @@ class BEs:
         # subprocess.call("pqos -I -a pid:{}={}".format(self.COS_id,self.pid_str[name]) + tail, shell=True)
         # subprocess.call("pqos -I -i 1 -p all:{} &".format(self.pid_str[name]), shell=True, stdout=pqosout)
         pqos_file = f"{self.tmp_dir}/pqos.{self.pid_str_md5[name]}"
-        cmd_pqos_assoc = f"pqos -I -a pid:{self.COS_id}={self.pid_str[name]} {'' if PQOS_OUTPUT_ENABLED else '1>/dev/null'}"
-        cmd_pqos_monitor = f"nohup pqos -I -i 1 -p all:{self.pid_str[name]} > {pqos_file} 2>&1 &"
+        cmd_pqos_assoc = f"echo {nodes[self.ip]['passwd']} | sudo -S pqos -I -a pid:{self.COS_id}={self.pid_str[name]} {'' if PQOS_OUTPUT_ENABLED else '1>/dev/null'}"
+        cmd_pqos_monitor = f"echo {nodes[self.ip]['passwd']} | sudo -S nohup pqos -I -i 1 -p all:{self.pid_str[name]} > {pqos_file} 2>&1 &"
         run_on_node(self.ip, cmd_pqos_assoc)
         run_on_node(self.ip, cmd_pqos_monitor)
 

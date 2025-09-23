@@ -8,7 +8,7 @@ import subprocess
 from functools import wraps
 
 nodes = {
-    '172.17.1.72': {'user': 'wjy', 'passwd': 'gis.xen'}, # venus
+    '172.17.1.74': {'user': 'wjy', 'passwd': 'gis.xen'}, # mercury
     '172.17.1.73': {'user': 'wjy', 'passwd': 'gis.xen'}, # mars
     '172.17.1.75': {'user': 'lmj', 'passwd': 'lmj123'}, # jupiter
     '172.17.1.78': {'user': 'wjy', 'passwd': 'gis.xen'}, # neptune
@@ -21,7 +21,7 @@ def run_on_node(ip, instr):
         f"{nodes[ip]['user']}@{ip}",
         instr
     ]
-    print(" ".join(command))
+    # print(" ".join(command))
     return subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, preexec_fn=os.setsid)
 
 def copy_from_node(ip, src, dest):
@@ -48,6 +48,8 @@ def get_figsize(w, h, dpi=100):
     return [w * 0.3937008 * dpi / 100, h * 0.3937008 * dpi / 100]
 
 def cache_2_way(cache, mb_per_way):
+    if cache != cache:
+        return 1
     return int(round(cache / mb_per_way))
 
 

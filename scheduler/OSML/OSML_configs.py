@@ -29,6 +29,8 @@ class MODE(Enum):
     Dead = 4
     Background = 5
 
+BIND_PATH = {}
+VOLUME_PATH = {}
 
 def init(ip):
     global ROOT, PRIORITY, SHARING, MAX_INVOLVED, ACCEPTABLE_SLOWDOWN, SCHEDULING_INTERVAL, PQOS_OUTPUT_ENABLED, AGGRESSIVE, HISTORY_LEN, PERF_INTERVAL, TOP_INTERVAL, LATENCY_INTERVAL, NAMES, NAME_2_PNAME, QOS_TARGET, MAX_LOAD, RPS_COLLECTED, SETUP_STR, LAUNCH_STR, WARMUP_TIME, LATENCY_STR, CHANGE_RPS_STR, ACTION_SPACE, ACTION_ID, ACTION_SPACE_ADD, ACTION_SPACE_SUB, ACTION_ID_ADD, ACTION_ID_SUB, N_FEATURES, A_FEATURES, A_SHADOW_FEATURES, A_LABELS, B_FEATURES, B_LABELS, B_SHADOW_FEATURES, B_SHADOW_LABELS, C_FEATURES, COLLECT_FEATURES, COLLECT_MUL_FEATURES, COLLECT_N_FEATURES, MAX_VAL, MIN_VAL, ALPHA, BES, LAUNCH_STR_BE, DOCKER_CONTAINER
@@ -148,24 +150,26 @@ def init(ip):
     }
 
     # Instructions for getting response latency of each application
-    LATENCY_STR = {
-                   "masstree": "tail -n 1 "+VOLUME_PATH+"/tailbench-v0.9/masstree/latency_of_last_second.txt",
-        "masstree-2500": "tail -n 1 " + VOLUME_PATH + "/tailbench-v0.9/masstree/latency_of_last_second.txt",
-        "masstree-3000": "tail -n 1 " + VOLUME_PATH + "/tailbench-v0.9/masstree/latency_of_last_second.txt",
-        "masstree-3500": "tail -n 1 " + VOLUME_PATH + "/tailbench-v0.9/masstree/latency_of_last_second.txt",
-        "masstree-4000": "tail -n 1 " + VOLUME_PATH + "/tailbench-v0.9/masstree/latency_of_last_second.txt",
-
-    }
+    def LATENCY_STR(name, ip):
+        dict = {
+            "masstree": "tail -n 1 "+VOLUME_PATH[ip]+"/tailbench-v0.9/masstree/latency_of_last_second.txt",
+            "masstree-2500": "tail -n 1 " + VOLUME_PATH[ip] + "/tailbench-v0.9/masstree/latency_of_last_second.txt",
+            "masstree-3000": "tail -n 1 " + VOLUME_PATH[ip] + "/tailbench-v0.9/masstree/latency_of_last_second.txt",
+            "masstree-3500": "tail -n 1 " + VOLUME_PATH[ip] + "/tailbench-v0.9/masstree/latency_of_last_second.txt",
+            "masstree-4000": "tail -n 1 " + VOLUME_PATH[ip] + "/tailbench-v0.9/masstree/latency_of_last_second.txt",
+        }
+        return dict[name]
 
     # Instructions for changing RPS of applications in tailbench
-    CHANGE_RPS_STR = {
-                      "masstree": "echo {RPS} > "+VOLUME_PATH+"/tailbench-v0.9/masstree/RPS_NOW",
-        "masstree-2500": "echo {RPS} > " + VOLUME_PATH + "/tailbench-v0.9/masstree/RPS_NOW",
-        "masstree-3000": "echo {RPS} > " + VOLUME_PATH + "/tailbench-v0.9/masstree/RPS_NOW",
-        "masstree-3500": "echo {RPS} > " + VOLUME_PATH + "/tailbench-v0.9/masstree/RPS_NOW",
-        "masstree-4000": "echo {RPS} > " + VOLUME_PATH + "/tailbench-v0.9/masstree/RPS_NOW",
-
-    }
+    def CHANGE_RPS_STR(name, ip):
+        dict = {
+            "masstree": "echo {RPS} > "+VOLUME_PATH[ip]+"/tailbench-v0.9/masstree/RPS_NOW",
+            "masstree-2500": "echo {RPS} > " + VOLUME_PATH[ip] + "/tailbench-v0.9/masstree/RPS_NOW",
+            "masstree-3000": "echo {RPS} > " + VOLUME_PATH[ip] + "/tailbench-v0.9/masstree/RPS_NOW",
+            "masstree-3500": "echo {RPS} > " + VOLUME_PATH[ip] + "/tailbench-v0.9/masstree/RPS_NOW",
+            "masstree-4000": "echo {RPS} > " + VOLUME_PATH[ip] + "/tailbench-v0.9/masstree/RPS_NOW",
+        }
+        return dict[name]
 
     # Action space of Model-C, [resource name, step]
     ACTION_SPACE = [("cores", 1), ("cores", -1), ("ways", 1), ("ways", -1), (None, 0)]
@@ -269,8 +273,8 @@ def init_docker(ip):
     else:
         logger.info(f"Docker image {DOCKER_IMAGE} already exists on {ip}")
     # PARSEC_IMAGE = "spirals/parsec-3.0:latest"
-    BIND_PATH = None
-    VOLUME_PATH = None
+    BIND_PATH[ip] = None
+    VOLUME_PATH[ip] = None
     # Start bechmark_container and get the volume path
     # outs, errs = shell_output("docker pull {}".format(DOCKER_IMAGE), wait=True, output=False, ip=ip)
     # logger.info((outs, errs))
@@ -297,20 +301,20 @@ def init_docker(ip):
 
     for item in mount_info:
         if item["Type"] == "volume":
-            VOLUME_PATH = item["Source"]
+            VOLUME_PATH[ip] = item["Source"]
         elif item["Type"] == "bind":
-            BIND_PATH = item["Source"]
+            BIND_PATH[ip] = item["Source"]
 
 
     def init_tailbench(ip):
         # Prepare inputs for tailbench
         # if not os.path.exists(BIND_PATH+"/tailbench.inputs"):
-        proc = run_on_node(ip, f"test -e {BIND_PATH}/tailbench.inputs && echo 1 || echo 0")
+        proc = run_on_node(ip, f"test -e {BIND_PATH[ip]}/tailbench.inputs && echo 1 || echo 0")
         outs, errs = proc.communicate()
         exists = outs.decode().strip() == "1"
 
         if not exists:
-            raise Exception("Please download the input of tailbench and put the \"tailbench.inputs\" folder in {}".format(BIND_PATH))
+            raise Exception("Please download the input of tailbench and put the \"tailbench.inputs\" folder in {}".format(BIND_PATH[ip]))
 
     '''def init_nginx():
         # Set this to point to the top level of the Nginx data directory
@@ -334,7 +338,7 @@ def init_docker(ip):
 def init_platform_conf(ip):
     global N_CORES, N_WAYS, MB_PER_WAY, N_COS, MBA_SUPPORT, MAX_THREADS, CORE_INDEX, WAY_INDEX, PHYSICAL_CORES
     # core_info_str = [line.strip() for line in subprocess.check_output("pqos -I -s | grep 'Core'", shell=True).decode().split("\n")]
-    proc = run_on_node(ip, "pqos -I -s | grep 'Core'")
+    proc = run_on_node(ip, f"echo {nodes[ip]['passwd']} | sudo -S pqos -I -s | grep 'Core'")
     outs, errs = proc.communicate()
     core_info_str = [line.strip() for line in outs.decode().split("\n") if line.strip()]
     core_info = []
@@ -371,4 +375,5 @@ def init_platform_conf(ip):
 
 for ip in nodes:
     run_on_node(ip, f"echo {nodes[ip]['passwd']} | sudo -S rm -rf /var/lock/libpqos")
+    run_on_node(ip, f"echo {nodes[ip]['passwd']} | sudo -S bash /home/wjy/SComet/scheduler/OSML/reset.sh")
     init(ip)

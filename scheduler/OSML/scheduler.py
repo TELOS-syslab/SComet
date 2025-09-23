@@ -41,11 +41,11 @@ def OSML(mgrs, lc_tasks_, be_tasks_, terminate_when_QoS_is_met=False, terminate_
             
         for mgr in mgrs:
             if len(list(mgr.programs.keys())) == 0:
-                mgr.add_app(lc_tasks.pop(), "PCT", sin_value(1, 0.5, (time.time() - start_time) / 1800), 16, launch_time=0, end_time=600)
+                mgr.add_app(lc_tasks.pop(), "PCT", int(100 * sin_value(1, 1, (time.time() - start_time) / 1800)), 16, launch_time=0, end_time=600)
             for app in list(mgr.programs.keys()):
                 if mgr.can_be_ended(app):
                     mgr.end(app)
-                    mgr.add_app(app, "PCT", sin_value(1, 0.5, (time.time() - start_time) / 1800), 16, launch_time=0, end_time=600)
+                    mgr.add_app(app, "PCT", int(100 * sin_value(1, 1, (time.time() - start_time) / 1800)), 16, launch_time=0, end_time=600)
                 if mgr.RPS_can_be_changed(app):
                     mgr.change_RPS(app)
 
@@ -53,8 +53,9 @@ def OSML(mgrs, lc_tasks_, be_tasks_, terminate_when_QoS_is_met=False, terminate_
                 if mgr.BEs.status[be] == "dead":
                     mgr.BEs.remove(be)
 
-            if mgr.BEs.empty():
+            if mgr.BEs.empty() and be_tasks:
                 mgr.BEs.add(be_tasks.pop())
+                print("\nBE left:", be_tasks)
 
             mgr.update_pending_queue()
 
