@@ -429,7 +429,7 @@ class program_mgr:
             cores_required = 0 if core_len > 0 else 1
             ways_required = 0 if way_len > 0 else 1
 
-            # print("launch", name, cores_required, ways_required)
+            print("launch", name, core_len, cores_required, way_len, ways_required)
             if not (cores_required == 0 and ways_required == 0):
                 victim = self.select_victim(cores_required, ways_required)
                 self.allocate_diff(
