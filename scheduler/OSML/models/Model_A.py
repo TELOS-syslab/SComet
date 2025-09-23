@@ -56,7 +56,7 @@ class Model_A:
                 self.saver.restore(self.sess, model_path)
                 print_color("Model A load successfully.","green")
             else:
-                print(is_train, checkpoint, tf.train.checkpoint_exists(checkpoint.model_checkpoint_path))
+                # print(is_train, checkpoint, tf.train.checkpoint_exists(checkpoint.model_checkpoint_path))
                 print_color("Model A is not loaded.","red")
 
     def use_model(self, input_arr):
