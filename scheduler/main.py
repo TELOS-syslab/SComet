@@ -17,7 +17,7 @@ import SComet_Paragon_scheduler
 LC_TASKS = 'masstree'
 THREADS = 16
 MAX_LOAD = [2500, 3000, 3500, 4000]
-QOS = 6 # ms
+QOS = 5 # ms
 
 benchmark_set = 'microbenchmark'
 if len(sys.argv) > 1:
@@ -36,6 +36,7 @@ constant = True
 if len(sys.argv) > 3:
     constant = bool(int(sys.argv[3]))
     print(f"constant: {constant}")
+
 
 lc_tasks = {}
 phase = 0
@@ -73,7 +74,7 @@ for root, dirs, files in os.walk(f'/home/wjy/SComet/benchmarks/{benchmark_set}/s
             }
 print(be_tasks.keys())
 
-ip_list = ['172.17.1.73', '172.17.1.78', '172.17.1.72', '172.17.1.75']
+ip_list = ['172.17.1.72', '172.17.1.74', '172.17.1.73', '172.17.1.75']
 
 for ip in ip_list:
     run_on_node(ip, f"mkdir -p /home/wjy/SComet/benchmarks/{benchmark_set}/QoS").wait()
@@ -95,7 +96,7 @@ for ip in ip_list:
 
 if algorithm == "SComet":
     SComet_scheduler = SComet_scheduler.SComet_Scheduler("SComet", benchmark_set, ip_list, lc_tasks, be_tasks)
-    SComet_scheduler.run()
+    SComet_scheduler.run(0)
 if algorithm == "PARTIES":
     PARTIES_scheduler = scheduler.Scheduler("PARTIES", benchmark_set, ip_list, lc_tasks, be_tasks)
     PARTIES_scheduler.run()

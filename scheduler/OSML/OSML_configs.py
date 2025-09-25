@@ -33,7 +33,8 @@ BIND_PATH = {}
 VOLUME_PATH = {}
 
 def init(ip):
-    global ROOT, PRIORITY, SHARING, MAX_INVOLVED, ACCEPTABLE_SLOWDOWN, SCHEDULING_INTERVAL, PQOS_OUTPUT_ENABLED, AGGRESSIVE, HISTORY_LEN, PERF_INTERVAL, TOP_INTERVAL, LATENCY_INTERVAL, NAMES, NAME_2_PNAME, QOS_TARGET, MAX_LOAD, RPS_COLLECTED, SETUP_STR, LAUNCH_STR, WARMUP_TIME, LATENCY_STR, CHANGE_RPS_STR, ACTION_SPACE, ACTION_ID, ACTION_SPACE_ADD, ACTION_SPACE_SUB, ACTION_ID_ADD, ACTION_ID_SUB, N_FEATURES, A_FEATURES, A_SHADOW_FEATURES, A_LABELS, B_FEATURES, B_LABELS, B_SHADOW_FEATURES, B_SHADOW_LABELS, C_FEATURES, COLLECT_FEATURES, COLLECT_MUL_FEATURES, COLLECT_N_FEATURES, MAX_VAL, MIN_VAL, ALPHA, BES, LAUNCH_STR_BE, DOCKER_CONTAINER
+    global ROOT, PRIORITY, SHARING, MAX_INVOLVED, ACCEPTABLE_SLOWDOWN, SCHEDULING_INTERVAL, PQOS_OUTPUT_ENABLED, AGGRESSIVE, HISTORY_LEN, PERF_INTERVAL, TOP_INTERVAL, LATENCY_INTERVAL, NAMES, NAME_2_PNAME, QOS_TARGET, MAX_LOAD, RPS_COLLECTED, SETUP_STR, LAUNCH_STR, WARMUP_TIME, LATENCY_STR, CHANGE_RPS_STR, ACTION_SPACE, ACTION_ID, ACTION_SPACE_ADD, ACTION_SPACE_SUB, ACTION_ID_ADD, ACTION_ID_SUB, N_FEATURES, A_FEATURES, A_SHADOW_FEATURES, A_LABELS, B_FEATURES, B_LABELS, B_SHADOW_FEATURES, B_SHADOW_LABELS, C_FEATURES, COLLECT_FEATURES, COLLECT_MUL_FEATURES, COLLECT_N_FEATURES, MAX_VAL, MIN_VAL, ALPHA, BES, LAUNCH_STR_BE, DOCKER_CONTAINER, LATENCY_DIST
+    global PHASE
     # Root path of the project
     ROOT = os.path.dirname(os.path.abspath(__file__))
 
@@ -75,54 +76,39 @@ def init(ip):
     LATENCY_INTERVAL = 1
 
     # Name of each application
-    NAMES = ["masstree", "masstree-2500", "masstree-3000", "masstree-3500", "masstree-4000"]
+    NAMES = ["masstree", "masstree-2800", "masstree-2600", "masstree-2400", "masstree-2200"]
+    PHASE = {
+        "masstree": 0, 
+        "masstree-2800": -1, 
+        "masstree-2600": 0.6, 
+        "masstree-2400": -1, 
+        "masstree-2200": 1.2
+    }
 
     # Process name of each application
-    NAME_2_PNAME = {
-                    "masstree": "mttest_integrated",
-                    "masstree-2500": "mttest_integrated",
-                    "masstree-3000": "mttest_integrated",
-                    "masstree-3500": "mttest_integrated",
-                    "masstree-4000": "mttest_integrated",
-                    }
+    NAME_2_PNAME = {name: "mttest_integrated" for name in NAMES}
 
     # QoS target of each application, in millisecond
-    QOS_TARGET = {
-                    "masstree": 6,
-                    "masstree-2500": 6,
-                    "masstree-3000": 6,
-                    "masstree-3500": 6,
-                    "masstree-4000": 6,
-                  }
+    QOS_TARGET = {name: 3 for name in NAMES}
 
     # Max load that can satisfy QoS target. Note that the max load may vary on different platforms.
     MAX_LOAD = {
-                "masstree": 5000,
-                "masstree-2500": 2500,
-                "masstree-3000": 3000,
-                "masstree-3500": 3500,
-                "masstree-4000": 4000,
+        name: (5000 if name == "masstree" else int(name.split("-")[1]))
+        for name in NAMES
     }
 
     # RPSs used for data collection
     RPS_COLLECTED = {
-                     'masstree': [3000, 3400, 3800, 4200, 4600],
-                        'masstree-2500': [3000, 3400, 3800, 4200, 4600],
-                        'masstree-3000': [3000, 3400, 3800, 4200, 4600],
-                        'masstree-3500': [3000, 3400, 3800, 4200, 4600],
-                        'masstree-4000': [3000, 3400, 3800, 4200, 4600],
+        name: [MAX_LOAD[name] - 2000 + 400*i for i in range(5)]
+        for name in NAMES
     }
-
     SETUP_STR = {}
 
     # Instructions for launching each application
     LAUNCH_STR = {
-                  "masstree": "docker exec -itd " +  DOCKER_CONTAINER + " /home/OSML_Artifact/apps/tailbench-v0.9/masstree/run.sh {RPS} 2760000 {threads}",
-        "masstree-2500": "docker exec -itd " + DOCKER_CONTAINER + " /home/OSML_Artifact/apps/tailbench-v0.9/masstree/run.sh {RPS} 2760000 {threads}",
-        "masstree-3000": "docker exec -itd " + DOCKER_CONTAINER + " /home/OSML_Artifact/apps/tailbench-v0.9/masstree/run.sh {RPS} 2760000 {threads}",
-        "masstree-3500": "docker exec -itd " + DOCKER_CONTAINER + " /home/OSML_Artifact/apps/tailbench-v0.9/masstree/run.sh {RPS} 2760000 {threads}",
-        "masstree-4000": "docker exec -itd " + DOCKER_CONTAINER + " /home/OSML_Artifact/apps/tailbench-v0.9/masstree/run.sh {RPS} 2760000 {threads}",
-                  }
+        name: f"docker exec -itd {DOCKER_CONTAINER} /home/OSML_Artifact/apps/tailbench-v0.9/masstree/run.sh {{RPS}} 2760000 {{threads}}"
+        for name in NAMES
+    }
 
     # BES = ["blackscholes", "bodytrack", "streamcluster"]
     # LAUNCH_STR_BE = "docker run spirals/parsec-3.0 -a run -p parsec.{} -i native -n 20 1>/dev/null 2>/dev/null & "
@@ -141,35 +127,33 @@ def init(ip):
     LAUNCH_STR_BE = "bash /home/wjy/SComet/benchmarks/spec2017/script/{}.sh"
 
     # Warmup time after launching an application, in second
-    WARMUP_TIME = {
-                   "masstree": 1,
-        "masstree-2500": 1,
-        "masstree-3000": 1,
-        "masstree-3500": 1,
-        "masstree-4000": 1,
-    }
+    WARMUP_TIME = {name: 1 for name in NAMES}
 
     # Instructions for getting response latency of each application
     def LATENCY_STR(name, ip):
-        dict = {
-            "masstree": "tail -n 1 "+VOLUME_PATH[ip]+"/tailbench-v0.9/masstree/latency_of_last_second.txt",
-            "masstree-2500": "tail -n 1 " + VOLUME_PATH[ip] + "/tailbench-v0.9/masstree/latency_of_last_second.txt",
-            "masstree-3000": "tail -n 1 " + VOLUME_PATH[ip] + "/tailbench-v0.9/masstree/latency_of_last_second.txt",
-            "masstree-3500": "tail -n 1 " + VOLUME_PATH[ip] + "/tailbench-v0.9/masstree/latency_of_last_second.txt",
-            "masstree-4000": "tail -n 1 " + VOLUME_PATH[ip] + "/tailbench-v0.9/masstree/latency_of_last_second.txt",
-        }
-        return dict[name]
+        return f"tail -n 1 {VOLUME_PATH[ip]}/tailbench-v0.9/masstree/latency_of_last_second.txt"
+    
+    def LATENCY_DIST(name, ip):
+        file_path = f"{VOLUME_PATH[ip]}/tailbench-v0.9/masstree/latency_distribution_of_last_second.txt"
+        try:
+            output = run_on_node(ip, f"echo {nodes[ip]['passwd']} | sudo -S cat {file_path}").communicate()[0].decode()
+        except subprocess.CalledProcessError:
+            return {}  # 文件不存在或读取失败
+
+        percentiles = {}
+        for line in output.splitlines():
+            if "th percentile:" in line:
+                try:
+                    p_str, val_str = line.split("th percentile: ")
+                    percentiles[int(p_str)] = int(val_str)
+                except ValueError:
+                    continue
+
+        return percentiles
 
     # Instructions for changing RPS of applications in tailbench
     def CHANGE_RPS_STR(name, ip):
-        dict = {
-            "masstree": "echo {RPS} > "+VOLUME_PATH[ip]+"/tailbench-v0.9/masstree/RPS_NOW",
-            "masstree-2500": "echo {RPS} > " + VOLUME_PATH[ip] + "/tailbench-v0.9/masstree/RPS_NOW",
-            "masstree-3000": "echo {RPS} > " + VOLUME_PATH[ip] + "/tailbench-v0.9/masstree/RPS_NOW",
-            "masstree-3500": "echo {RPS} > " + VOLUME_PATH[ip] + "/tailbench-v0.9/masstree/RPS_NOW",
-            "masstree-4000": "echo {RPS} > " + VOLUME_PATH[ip] + "/tailbench-v0.9/masstree/RPS_NOW",
-        }
-        return dict[name]
+        return f"echo {{RPS}} > {VOLUME_PATH[ip]}/tailbench-v0.9/masstree/RPS_NOW"
 
     # Action space of Model-C, [resource name, step]
     ACTION_SPACE = [("cores", 1), ("cores", -1), ("ways", 1), ("ways", -1), (None, 0)]
@@ -210,16 +194,16 @@ def init(ip):
     MAX_VAL = { "CPU_Utilization":3200,
                 "Frequency":3400,
                 "IPC":3,
-                "Misses":1e+10,
-                "MBL":200000,
+                "Misses":1e+4,
+                "MBL":20000,
                 "Virt_Memory":1e+12,
-                "Res_Memory":1e+12,
-                "Allocated_Cache":15,
+                "Res_Memory":1e+11,
+                "Allocated_Cache":30,
                 "Allocated_Core":32,
                 "MBL_N":20000,
-                "Allocated_Cache_N":15,
+                "Allocated_Cache_N":30,
                 "Allocated_Core_N":32,
-                "Target_Cache":15,
+                "Target_Cache":30,
                 "Target_Core":32,
                 "QoS":1
                 }
@@ -373,7 +357,19 @@ def init_platform_conf(ip):
     MAX_THREADS = N_CORES
     WAY_INDEX = list(range(N_WAYS))
 
+def calculate_violation_for_task(name, ip):
+    latency_dict = LATENCY_DIST(name, ip)
+    # print("Accessing latency dict from", name, ip)
+    # print(latency_dict)
+    if len(latency_dict) < 100:
+        return 0
+    for p in range(1, 101):
+        if latency_dict[p] > QOS_TARGET[name] * 1000000:
+            return 100 - p
+    return 0
+
 for ip in nodes:
     run_on_node(ip, f"echo {nodes[ip]['passwd']} | sudo -S rm -rf /var/lock/libpqos")
     run_on_node(ip, f"echo {nodes[ip]['passwd']} | sudo -S bash /home/wjy/SComet/scheduler/OSML/reset.sh")
     init(ip)
+

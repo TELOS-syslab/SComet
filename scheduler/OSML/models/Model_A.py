@@ -100,6 +100,7 @@ class Model_A:
         return tf.Variable(tf.zeros(shape=shape) + 0.1)
 
     def normalize_for_input(self, input_arr):
+        # print(input_arr)
         for i in range(len(input_arr)):
             input_arr[i] = (float(input_arr[i]) - self.max_min["input_min"][i]) / (
                         self.max_min["input_max"][i] - self.max_min["input_min"][i])

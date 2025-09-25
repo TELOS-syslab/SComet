@@ -28,7 +28,9 @@ class Scheduler:
         self.all_lc = copy.deepcopy(lc_tasks_)
         self.all_be = copy.deepcopy(be_tasks_)
         self.node_dict = {}
+        self.QoS_unsatisfied = {}
         for ip in ip_list_:
+            self.QoS_unsatisfied[ip] = False
             print(f"Generating Allocator for {ip}")
             self.node_dict[ip] = Allocator(self.benchmark_set, lc_tasks_, be_tasks_, ip)
             run_on_node(ip, f'rm -rf /home/wjy/SComet/benchmarks/{benchmark_set_}/QoS/*')
@@ -50,9 +52,12 @@ class Scheduler:
         for ip in self.node_dict:
             QoS_status, slack_list = self.node_dict[ip].get_QoS_status()
             if QoS_status == 1:
-                if max_slack < slack_list[0][1]["slack"]:
-                    max_slack = slack_list[0][1]["slack"]
-                    max_ip = ip
+                if self.node_dict[ip].available_resources['CPU'] and \
+                    self.node_dict[ip].available_resources['LLC'] > 0 and \
+                    self.node_dict[ip].available_resources['MBW'] >= 10:
+                    if max_slack < slack_list[0][1]["slack"]:
+                        max_slack = slack_list[0][1]["slack"]
+                        max_ip = ip
         if max_ip and self.be_tasks:
             return random.choice(list(self.be_tasks)), max_ip
         return None, None
@@ -67,16 +72,31 @@ class Scheduler:
         for ip in self.node_dict:
             result = self.node_dict[ip].reallocate()
             if result == -1:
-                print(f"Remove BE tasks from {ip}")
-                self.node_dict[ip].remove_newest_be_task()
+                if not self.QoS_unsatisfied[ip]:
+                    self.QoS_unsatisfied[ip] = True
+                else:
+                    print(f"Remove BE tasks from {ip}")
+                    self.node_dict[ip].remove_newest_be_task()
+            else:
+                self.QoS_unsatisfied[ip] = False
 
-    def run(self):
+    def run(self, monitor = False):
         start_time = time.time()
+        curr_stage = 0
         while True:
             time.sleep(1)
             print(f'\n\ntime {time.time() - start_time}:')
             self.prune()
             self.reallocate()
+
+            if monitor:
+                if (time.time() - start_time > curr_stage * 120):
+                    curr_stage += 1
+                    cmd = ["perf", "stat", "ls"]
+                    proc = subprocess.Popen(cmd)
+                    time.sleep(2)
+                    proc.send_signal(signal.SIGINT)
+                    proc.wait()
 
             print()
             for ip in self.node_dict:

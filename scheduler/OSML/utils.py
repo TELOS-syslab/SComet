@@ -8,21 +8,34 @@ import subprocess
 from functools import wraps
 
 nodes = {
+    '172.17.1.72': {'user': 'wjy', 'passwd': 'gis.xen'}, # venus
     '172.17.1.74': {'user': 'wjy', 'passwd': 'gis.xen'}, # mercury
     '172.17.1.73': {'user': 'wjy', 'passwd': 'gis.xen'}, # mars
     '172.17.1.75': {'user': 'lmj', 'passwd': 'lmj123'}, # jupiter
-    '172.17.1.78': {'user': 'wjy', 'passwd': 'gis.xen'}, # neptune
 }
 
-def run_on_node(ip, instr):
+def run_on_node(ip, instr, input_data=None):
     command = [
         "sshpass", "-p", nodes[ip]['passwd'],
         "ssh", "-o", "StrictHostKeyChecking=no",
         f"{nodes[ip]['user']}@{ip}",
         instr
     ]
-    # print(" ".join(command))
-    return subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, preexec_fn=os.setsid)
+    # print(' '.join(command))
+    proc = subprocess.Popen(
+        command,
+        stdin=subprocess.PIPE if input_data else None,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        preexec_fn=os.setsid
+    )
+
+    if input_data:
+        proc.stdin.write(input_data.encode())
+        proc.stdin.close()
+
+    return proc
+
 
 def copy_from_node(ip, src, dest):
     remote_src = f"{nodes[ip]['user']}@{ip}:{src}"

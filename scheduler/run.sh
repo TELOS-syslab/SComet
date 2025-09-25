@@ -1,6 +1,12 @@
 #!/bin/bash
 
-for i in {1..5}; do
+if [[ -z "$1" || "$1" -lt 1 ]]; then
+    RUNS=1
+else
+    RUNS=$1
+fi
+
+for ((i=1; i<=RUNS; i++)); do
     echo "===== 第 $i 次运行 ====="
 
     python3 -u main.py test SComet 1 > SComet_test.log 2>&1
@@ -12,6 +18,7 @@ for i in {1..5}; do
         echo "no SComet found, skip move"
     fi
 
+<<COMMENT
     python3 -u main.py test PARTIES 1 > PARTIES_test.log 2>&1
     latest_parties=$(ls -dt PARTIES*/ 2>/dev/null | head -n1)
     if [[ -n "$latest_parties" && -d "$latest_parties" ]]; then
@@ -21,7 +28,7 @@ for i in {1..5}; do
         echo "no PARTIES found, skip move"
     fi
 
-<<COMMENT
+
     python3 -u main.py test Paragon 1 > Paragon_test.log 2>&1
     latest_paragon=$(ls -dt Paragon*/ 2>/dev/null | head -n1)
     if [[ -n "$latest_paragon" && -d "$latest_paragon" ]]; then
@@ -41,11 +48,12 @@ for i in {1..5}; do
     fi
 COMMENT
 
+
 done
 
-for i in {1..5}; do
+for ((i=1; i<=RUNS; i++)); do
     echo "===== 第 $i 次运行 ====="
-
+<<COMMENT
     python3 -u main.py test SComet 0 > SComet_test.log 2>&1
     latest_scomet=$(ls -dt SComet*/ 2>/dev/null | head -n1)
     if [[ -n "$latest_scomet" && -d "$latest_scomet" ]]; then
@@ -64,7 +72,6 @@ for i in {1..5}; do
         echo "no PARTIES found, skip move"
     fi
 
-<<COMMENT
     python3 -u main.py test Paragon 0 > Paragon_test.log 2>&1
     latest_paragon=$(ls -dt Paragon*/ 2>/dev/null | head -n1)
     if [[ -n "$latest_paragon" && -d "$latest_paragon" ]]; then
@@ -83,5 +90,4 @@ for i in {1..5}; do
         echo "no SComet_Paragon found, skip move"
     fi
 COMMENT
-
 done

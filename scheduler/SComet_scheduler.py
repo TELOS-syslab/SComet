@@ -59,6 +59,10 @@ class SComet_Scheduler(Scheduler):
         for ip in self.node_dict:
             QoS_status, slack_list = self.node_dict[ip].get_QoS_status()
             if QoS_status == 1:
+                if not (self.node_dict[ip].available_resources['CPU'] and \
+                        self.node_dict[ip].available_resources['LLC'] > 0 and \
+                        self.node_dict[ip].available_resources['MBW'] >= 10):
+                    continue
                 if max_slack < slack_list[0][1]["slack"]:
                     max_slack = slack_list[0][1]["slack"]
                     max_prev_slack = slack_list[0][1]["prev_slack"]

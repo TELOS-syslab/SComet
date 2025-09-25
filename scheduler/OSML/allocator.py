@@ -337,10 +337,11 @@ class program_mgr:
             return True
         else:
             return False
+        
+    def all_be_done(self):
+        return all([b == "dead" for b in self.BEs.status.values()])
 
     def all_done(self):
-        if not all([b == "dead" for b in self.BEs.status.values()]):
-            return False
         return (len(self.pending_queue) == 0 and len(self.programs) == 0) or (len(self.programs) > 0 and all([self.programs[name].mode == MODE.Dead for name in self.programs]))
 
     def RPS_can_be_changed(self, name):
@@ -429,7 +430,7 @@ class program_mgr:
             cores_required = 0 if core_len > 0 else 1
             ways_required = 0 if way_len > 0 else 1
 
-            print("launch", name, core_len, cores_required, way_len, ways_required)
+            # print("launch", name, core_len, cores_required, way_len, ways_required)
             if not (cores_required == 0 and ways_required == 0):
                 victim = self.select_victim(cores_required, ways_required)
                 self.allocate_diff(
@@ -474,7 +475,8 @@ class program_mgr:
         #           ROOT+"/logs/OSML_log_latest.txt"))
         tmp_log_file = f"{ROOT}/tmp/OSML_log_{int(time.time())}.txt"
         log_str = str(self.log).replace('"', '\\"')  # 转义
-        run_on_node(self.ip, f'echo "{log_str}" > {tmp_log_file}')
+        # run_on_node(self.ip, f'echo "{log_str}" > {tmp_log_file}')
+        run_on_node(self.ip, f"cat > {tmp_log_file}", input_data=log_str)
         run_on_node(self.ip, f"cp {tmp_log_file} {ROOT}/logs/OSML_log_latest.txt")
 
         self.log_thread_configs["running"] = False
@@ -557,6 +559,8 @@ class program_mgr:
 
     def use_model_A(self, name):
         A_features = self.get_features(name, A_FEATURES)
+        # print(A_FEATURES)
+        # print(A_features)
         neighbor_features = self.get_neighbor_features(name)
         features = np.concatenate((A_features[:-3], neighbor_features), axis=0)
         output = model_a.use_model(features)
@@ -679,8 +683,12 @@ class program_mgr:
             names=[names]
         for name in names:
             model_c_features = self.get_normalized_features(name, C_FEATURES["s"])
+            # print(C_FEATURES["s"])
+            # print(model_c_features)
             max_index, noise_action = model_c.choose_action(model_c_features)
             action_resource, action_step = ACTION_SPACE[max_index]
+            # print("action_resource", action_resource)
+            # print("action_step", action_step)
             if action_resource is not None:
                 action = defaultdict(int)
                 action[action_resource] = action_step
@@ -691,6 +699,7 @@ class program_mgr:
 
             idle=self.resource_idle()
             predicted_QoS=self.use_model_B([name],[action])[name]
+            # print("predicted_QoS", predicted_QoS)
 
             self.last_action.append({
                                 "time":time.time(),
@@ -804,6 +813,8 @@ class program_mgr:
 
     def get_neighbor_features(self, name):
         neighbor_names = self.neighbors(name)
+        if not neighbor_names:
+            return [0, 0, 0]
         neighbor_proc_ids = [
             self.programs[app].proc_id for app in neighbor_names]
         features = self.get_features(neighbor_names, ["MBL"])
@@ -866,13 +877,14 @@ class program_mgr:
             self.log["BE"].append(BE_log)
 
     def log_latency(self, time_stamp):
-        latency_log = {"time": time_stamp, "latency": {}}
+        latency_log = {"time": time_stamp, "latency": {}, "latency_dict": {}}
         names = list(self.programs.keys())
         for name in names:
             if self.programs[name].pid is None:
                 continue
             latency = self.programs[name].get_latency()
             latency_log["latency"][name] = latency
+            latency_log["latency_dict"][name] = LATENCY_DIST(name, self.ip)
         self.log["latency"].append(latency_log)
 
     def log_allocation(self, time_stamp):
@@ -906,7 +918,7 @@ class program_mgr:
             names = [names]
         print("")
         print("{} seconds".format(round(time.time()-self.start_time,2)))
-        print("===============Latency===============")
+        print(f"==============={self.ip} Latency===============")
         log_str=[]
         for name in names:
             latency = self.programs[name].get_features("Latency")[0]
@@ -919,6 +931,8 @@ class program_mgr:
                 met = "\033[31m{}X QoS target\033[0m".format(round(latency/QOS_TARGET[name], 2))
             print("{}\t- {}\t- {}\t- {}".format(name, latency, RPS_str, met))
             log_str.append("{} - {} - {} - {}".format(name, latency, RPS_str, met))
+            violation = self.programs[name].get_features("Violation")[0]
+            print("Violation: {}".format(violation))
         if not self.BEs.empty():
             for name in self.BEs.BEs:
                 throughput=self.BEs.get_throughput(name)
@@ -934,7 +948,7 @@ class program_mgr:
         core_start = 0
         way_start = 0
         if self.manage:
-            print("===============Allocation===============")
+            print(f"==============={self.ip} Allocation===============")
             core_ranges = []
             way_ranges = []
             core_labels = []
@@ -980,6 +994,7 @@ class program_mgr:
                 print(s)
         if not self.BEs.empty():
             state="BE apps are allocated to: {} cores ({}-{}); {} ways ({}-{})".format(self.BEs.core_len,self.BEs.core_start,self.BEs.core_start+self.BEs.core_len, self.BEs.way_len,self.BEs.way_start,self.BEs.way_start+self.BEs.way_len)
+            print(state)
             core_ranges.append(self.BEs.core_len)
             core_labels.append("BE")
             way_ranges.append(self.BEs.way_len)
@@ -1615,12 +1630,13 @@ class program:
         else:
             Latency_update = True
 
-        if any([key in ["Latency", "QoS"] for key in keys]):
+        if any([key in ["Latency", "QoS", "Violation"] for key in keys]):
             if Latency_update:
                 try:
                     cmd = f"echo {nodes[self.ip]['passwd']} | sudo -S " + LATENCY_STR(self.name, self.ip)
                     # output = check_output(cmd, shell=True).decode()
                     output = run_on_node(self.ip, cmd).communicate()[0].decode()
+                    violation = calculate_violation_for_task(self.name, self.ip)
 
                     # 单独获取最后10行
                     # cmd_last10 = f"echo {nodes[self.ip]['passwd']} | sudo -S tail -n 10 {VOLUME_PATH[self.ip]}/tailbench-v0.9/masstree/latency_of_last_second.txt"
@@ -1653,9 +1669,11 @@ class program:
                     self.history_latency.append(latency)
                     self.state["Latency"] = latency
                     self.state["QoS"] = QOS_TARGET[self.name]/latency
+                    self.state["Violation"] = violation
             else:
                 self.state["Latency"] = self.last_latency[1]
                 self.state["QoS"] = QOS_TARGET[self.name]/self.last_latency[1]
+                self.state["Violation"] = calculate_violation_for_task(self.name, self.ip)
 
         if self.regular_update:
             IPS_update = self.last_IPS is None or time.time() - \

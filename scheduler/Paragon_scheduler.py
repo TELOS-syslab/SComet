@@ -89,7 +89,10 @@ class Paragon_Scheduler(Scheduler):
             QoS_status, slack_list = self.node_dict[ip].get_QoS_status()
             if QoS_status != 1:
                 continue
-
+            if not (self.node_dict[ip].available_resources['CPU'] and \
+                self.node_dict[ip].available_resources['LLC'] > 0 and \
+                self.node_dict[ip].available_resources['MBW'] >= 10):
+                continue
             best_score = -float("inf")
             best_be = None
             for be in be_list:

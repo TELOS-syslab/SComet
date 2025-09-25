@@ -121,6 +121,11 @@ class SComet_Paragon_Scheduler(Scheduler):
             if QoS_status != 1:
                 continue
 
+            if not (self.node_dict[ip].available_resources['CPU'] and \
+                self.node_dict[ip].available_resources['LLC'] > 0 and \
+                self.node_dict[ip].available_resources['MBW'] >= 10):
+                continue
+                
             used_be_list = []
             if slack_list[0][1]["slack"] > 0.8 and slack_list[0][1]["prev_slack"] > 0.8:
                 used_be_list = sorted_be_list[len(sorted_be_list) // 2:]
